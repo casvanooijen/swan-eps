@@ -119,7 +119,7 @@ class Swanstring(object):
         # North boundary
         self.string += f'BOUNDSPEC SIDE N CCW VARIABLE FILE &\n'
         for i in range(lon.values.shape[0]):
-            j = lon.values.shape[0] - 1 - i
+            j = lon.values.shape[0] - 1 - i # make sure [len]-parameters appear in increasing order
             dist = np.amax(lon.values) - lon.values[j]
 
             if os.path.isfile(directory+f'{tpar_fname}_n_{j}.tpar'):
@@ -333,7 +333,7 @@ class write_EPS_input:
             # Skip number of grid cells, because these are predefined in this type of multilevel approximation
 
             # Open ERA5 wave data; necessary to write boundary conditions;
-            era5wavefield = xr.open_dataset("P:\\1230882-emodnet_hrsm\\vanCas\\Ensemble_Forecast\\boundary_conditions\\waves\\era5wavefield.nc", engine='netcdf4')
+            era5wavefield = write_EPS_input.era5wavefield
             
             # Define paths and filenames
             bottom_path = write_EPS_input.bottom_path
@@ -462,7 +462,7 @@ class write_EPS_input:
         	# Skip number of grid cells, maximum iteration and frequency domain, because these are fixed by the approximation method
 
             # Open ERA5 wave data; necessary to write boundary conditions;
-            era5wavefield = xr.open_dataset("P:\\1230882-emodnet_hrsm\\vanCas\\Ensemble_Forecast\\boundary_conditions\\waves\\era5wavefield.nc", engine='netcdf4')
+            era5wavefield = write_EPS_input.era5wavefield
             
             # Define paths and filenames
             bottom_path = write_EPS_input.bottom_path
@@ -549,7 +549,7 @@ class write_EPS_input:
         	# Skip number of grid cells, and generation, because these are fixed by the approximation method
 
             # Open ERA5 wave data; necessary to write boundary conditions;
-            era5wavefield = xr.open_dataset("P:\\1230882-emodnet_hrsm\\vanCas\\Ensemble_Forecast\\boundary_conditions\\waves\\era5wavefield.nc", engine='netcdf4')
+            era5wavefield = write_EPS_input.era5wavefield
             
             # Define paths and filenames
             bottom_path = write_EPS_input.bottom_path
@@ -717,7 +717,7 @@ class write_EPS_input:
         	# Skip number of grid cells, maximum iteration and frequency domain, because these are fixed by the approximation method
 
             # Open ERA5 wave data; necessary to write boundary conditions;
-            era5wavefield = xr.open_dataset("P:\\1230882-emodnet_hrsm\\vanCas\\Ensemble_Forecast\\boundary_conditions\\waves\\era5wavefield.nc", engine='netcdf4')
+            era5wavefield = write_EPS_input.era5wavefield
             
             # Define paths and filenames
             bottom_path = write_EPS_input.bottom_path
@@ -834,7 +834,7 @@ class write_EPS_input:
         	# Skip number of grid cells, maximum iteration and frequency domain, because these are fixed by the approximation method
 
             # Open ERA5 wave data; necessary to write boundary conditions;
-            era5wavefield = xr.open_dataset("P:\\1230882-emodnet_hrsm\\vanCas\\Ensemble_Forecast\\boundary_conditions\\waves\\era5wavefield.nc", engine='netcdf4')
+            era5wavefield = write_EPS_input.era5wavefield
             
             # Define paths and filenames
             bottom_path = write_EPS_input.bottom_path
