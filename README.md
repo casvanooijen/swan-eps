@@ -38,3 +38,9 @@ The code in this repository assumes certain conventions when it comes to the nam
 * **Multilevel Monte Carlo ensemble forecast .swn-files**: '\{chosen_name\}\_level\{level_index\}\_sample\{sample_index\}.swn';
 * **Multilevel multifidelity Monte Carlo ensemble forecast .swn-files**: '\{chosen_name\}\_level\{level_index\}_\{fidelity\}\_sample\{sample_index\}.swn'. Here, \{fidelity\} is either 'hi' or 'lo' to indicate high or low fidelity respectively;
 * **Nested multilevel Monte Carlo ensemble forecast .swn-files**: '\{chosen_name\}\_olevel\{outer_level_index\}\_ilevel\{inner_level_index\}\_sample\{sample_index\}.swn'
+
+**GENERAL NOTES**
+
+* The code is written for an application to the North Sea domain. However, this can easily be changed in the code by changing the values of parameters in the Swanstring-class of 'file_tools.py'.
+* To use these tools, you have to change the path variables at the start of the write_EPS_input-class in 'file_tools.py' to the paths that specify the location of your files. 
+
