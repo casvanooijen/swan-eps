@@ -18,6 +18,6 @@ In order for ensemble forecasts to work on your computer, your files have to be 
     * bottom topography file: *.bot-file defining the bottom level of your domain;
     * output_locations: contains files defining the output locations for which SWAN will return energy density spectrum data;
 * EPSruns:
-    * {run1}
-    * {run2}
+    * \{run1\}
+    * \{run2\}
     * ...
