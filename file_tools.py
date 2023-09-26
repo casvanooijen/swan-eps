@@ -1435,112 +1435,6 @@ class ecmwfdata:
                 f = open(tparpath + f'{tparname}_s_{i}.tpar', 'w')
             f.write(string)
 
-
-
-
-
-            
-
-
-            
-
-    
-    # @staticmethod
-    # def write_MLMC_EPS_input_files(input_path, fname, wind_path_and_wind_filename, num_samples, N_list, approx='spatial_resolution3',
-    #                            tpar_path=None):
-    #     # Check if N_list is valid
-
-    #     if sum(N_list) > num_samples:
-    #         raise ValueError("Not enough samples available. Decrease numbers in N_list.")
-    #     elif sum(N_list) < num_samples:
-    #         not_all_samples_continue = input("Warning: not all available samples are used. Continue anyway? [y/n] ")
-    #         if not_all_samples_continue == 'y' or not_all_samples_continue == 'Y' or not_all_samples_continue == 'yes' or not_all_samples_continue == 'Yes':
-    #             num_samples = sum(N_list)
-    #         else:
-    #             return
-            
-    #     ## Approximation using full resolution, half resolution and quarter resolution ##################################
-
-    #     if approx == 'spatial_resolution3':
-
-    #         # Check if N_list is valid for 'spatial_resolution3'-approximation type
-
-    #         if len(N_list) != 3:
-    #             raise ValueError("Length of N_list should be 3 when using the 'spatial_resolution3'-approximations.")
-
-    #         # Input options
-    #         options = input('Default parameters or input manually? [default/manual] ')
-    #         while options != 'default':
-    #             print('Sorry, I did not hear you correctly. Did you mean default? ')
-    #             options = input('Default parameters or input manually? [default/manual] ')
-                
-    #         if options == 'default':
-    #             start_iso = '20131205.000000'
-    #             end_iso = '20131207.210000'
-    #             timestep = 1
-    #             project = 'SWAN-EPS'
-    #             freq_lower_bound = .03
-    #             boundary_direction_type = 'PEAK'
-    #             generation = 3
-    #             npnts = 98
-    #             maxitns = 20
-    #         else:
-    #             # not coded yet
-    #             return
-            
-    #         run_counter = 0
-
-    #         # Lowest approximation level
-
-    #         for n in range(N_list[0]):
-    #             sample_number = n
-    #             swnstr = Swanstring(f'{fname}_level0_{sample_number}', project, ppt.int_to_threedigitstring(run_counter), start_iso,
-    #                                 end_iso, timestep)
-    #             swnstr.input(105, 120, '../../geometry/swan-ns-j22_6-v1a_adjust.bot', windfile=f'../../boundary_conditions/meteo/members/sinterklaasstorm_wind_ensemble_{sample_number}.nc',
-    #                         spec_lowerbound=freq_lower_bound)
-    #             # Boundary conditions; can only write this code if I know how it works
-
-    #             swnstr.physics(generation=generation)
-    #             swnstr.numerical_parameters(npnts=npnts, maxitns=maxitns)
-    #             swnstr.output(f'../../geometry/output_locations/', f'../../output/0/', f'eps0_level0_sample{sample_number}')
-    #             swnstr.write_to_file("P:\\1230882-emodnet_hrsm\\vanCas\\Ensemble_Forecast\\input\\0")
-
-    #         # Higher approximation levels
-
-    #         for l in range(1, 3):
-    #             for n in range(N_list[l]):
-    #                 sample_number = sum(N_list[:l]) + n
-
-    #                 swnstr0 = Swanstring(f'{fname}_level{l-1}_{sample_number}', project, ppt.int_to_threedigitstring(run_counter), start_iso,
-    #                                 end_iso, timestep)
-    #                 swnstr0.input(105, 120, '../../geometry/swan-ns-j22_6-v1a_adjust.bot', windfile=f'../../boundary_conditions/meteo/members/sinterklaasstorm_wind_ensemble_{sample_number}.nc',
-    #                             spec_lowerbound=freq_lower_bound)
-    #                 # Boundary conditions; can only write this code if I know how it works
-
-    #                 swnstr0.physics(generation=generation)
-    #                 swnstr0.numerical_parameters(npnts=npnts, maxitns=maxitns)
-    #                 swnstr0.output(f'../../geometry/output_locations/', f'../../output/0/', f'eps0_level{l-1}_sample{sample_number}')
-    #                 swnstr0.write_to_file("P:\\1230882-emodnet_hrsm\\vanCas\\Ensemble_Forecast\\input\\0")
-
-    #                 swnstr1 = Swanstring(f'{fname}_level{l}_{sample_number}', project, ppt.int_to_threedigitstring(run_counter), start_iso,
-    #                                 end_iso, timestep)
-    #                 swnstr1.input(105, 120, '../../geometry/swan-ns-j22_6-v1a_adjust.bot', windfile=f'../../boundary_conditions/meteo/members/sinterklaasstorm_wind_ensemble_{sample_number}.nc',
-    #                             spec_lowerbound=freq_lower_bound)
-    #                 # Boundary conditions; can only write this code if I know how it works
-
-    #                 swnstr1.physics(generation=generation)
-    #                 swnstr1.numerical_parameters(npnts=npnts, maxitns=maxitns)
-    #                 swnstr1.output(f'../../geometry/output_locations/', f'../../output/0/', f'eps0_level{l}_sample{sample_number}')
-    #                 swnstr1.write_to_file("P:\\1230882-emodnet_hrsm\\vanCas\\Ensemble_Forecast\\input\\0")
-
-
-
-if __name__ == '__main__':
-    this_code_block = "is_useless"
-    
-
-
-
     
 ##############
 ## OLD CODE ##
@@ -1566,4 +1460,93 @@ if __name__ == '__main__':
 #                   'latitude': ('latitude', f['latitude'].values)}
 #         attrs = {'Conventions': 'CF-1.6'}
 #         data = xr.Dataset(data_vars=data_vars_dict, coords=coords, attrs=attrs)
-#         data.to_netcdf(path+fname+f'_{n}.nc')
+#         data.to_netcdf(path+fname+f'_{n}.nc'
+    
+# @staticmethod
+# def write_MLMC_EPS_input_files(input_path, fname, wind_path_and_wind_filename, num_samples, N_list, approx='spatial_resolution3',
+#                            tpar_path=None):
+#     # Check if N_list is valid
+
+#     if sum(N_list) > num_samples:
+#         raise ValueError("Not enough samples available. Decrease numbers in N_list.")
+#     elif sum(N_list) < num_samples:
+#         not_all_samples_continue = input("Warning: not all available samples are used. Continue anyway? [y/n] ")
+#         if not_all_samples_continue == 'y' or not_all_samples_continue == 'Y' or not_all_samples_continue == 'yes' or not_all_samples_continue == 'Yes':
+#             num_samples = sum(N_list)
+#         else:
+#             return
+        
+#     ## Approximation using full resolution, half resolution and quarter resolution ##################################
+
+#     if approx == 'spatial_resolution3':
+
+#         # Check if N_list is valid for 'spatial_resolution3'-approximation type
+
+#         if len(N_list) != 3:
+#             raise ValueError("Length of N_list should be 3 when using the 'spatial_resolution3'-approximations.")
+
+#         # Input options
+#         options = input('Default parameters or input manually? [default/manual] ')
+#         while options != 'default':
+#             print('Sorry, I did not hear you correctly. Did you mean default? ')
+#             options = input('Default parameters or input manually? [default/manual] ')
+            
+#         if options == 'default':
+#             start_iso = '20131205.000000'
+#             end_iso = '20131207.210000'
+#             timestep = 1
+#             project = 'SWAN-EPS'
+#             freq_lower_bound = .03
+#             boundary_direction_type = 'PEAK'
+#             generation = 3
+#             npnts = 98
+#             maxitns = 20
+#         else:
+#             # not coded yet
+#             return
+        
+#         run_counter = 0
+
+#         # Lowest approximation level
+
+#         for n in range(N_list[0]):
+#             sample_number = n
+#             swnstr = Swanstring(f'{fname}_level0_{sample_number}', project, ppt.int_to_threedigitstring(run_counter), start_iso,
+#                                 end_iso, timestep)
+#             swnstr.input(105, 120, '../../geometry/swan-ns-j22_6-v1a_adjust.bot', windfile=f'../../boundary_conditions/meteo/members/sinterklaasstorm_wind_ensemble_{sample_number}.nc',
+#                         spec_lowerbound=freq_lower_bound)
+#             # Boundary conditions; can only write this code if I know how it works
+
+#             swnstr.physics(generation=generation)
+#             swnstr.numerical_parameters(npnts=npnts, maxitns=maxitns)
+#             swnstr.output(f'../../geometry/output_locations/', f'../../output/0/', f'eps0_level0_sample{sample_number}')
+#             swnstr.write_to_file("P:\\1230882-emodnet_hrsm\\vanCas\\Ensemble_Forecast\\input\\0")
+
+#         # Higher approximation levels
+
+#         for l in range(1, 3):
+#             for n in range(N_list[l]):
+#                 sample_number = sum(N_list[:l]) + n
+
+#                 swnstr0 = Swanstring(f'{fname}_level{l-1}_{sample_number}', project, ppt.int_to_threedigitstring(run_counter), start_iso,
+#                                 end_iso, timestep)
+#                 swnstr0.input(105, 120, '../../geometry/swan-ns-j22_6-v1a_adjust.bot', windfile=f'../../boundary_conditions/meteo/members/sinterklaasstorm_wind_ensemble_{sample_number}.nc',
+#                             spec_lowerbound=freq_lower_bound)
+#                 # Boundary conditions; can only write this code if I know how it works
+
+#                 swnstr0.physics(generation=generation)
+#                 swnstr0.numerical_parameters(npnts=npnts, maxitns=maxitns)
+#                 swnstr0.output(f'../../geometry/output_locations/', f'../../output/0/', f'eps0_level{l-1}_sample{sample_number}')
+#                 swnstr0.write_to_file("P:\\1230882-emodnet_hrsm\\vanCas\\Ensemble_Forecast\\input\\0")
+
+#                 swnstr1 = Swanstring(f'{fname}_level{l}_{sample_number}', project, ppt.int_to_threedigitstring(run_counter), start_iso,
+#                                 end_iso, timestep)
+#                 swnstr1.input(105, 120, '../../geometry/swan-ns-j22_6-v1a_adjust.bot', windfile=f'../../boundary_conditions/meteo/members/sinterklaasstorm_wind_ensemble_{sample_number}.nc',
+#                             spec_lowerbound=freq_lower_bound)
+#                 # Boundary conditions; can only write this code if I know how it works
+
+#                 swnstr1.physics(generation=generation)
+#                 swnstr1.numerical_parameters(npnts=npnts, maxitns=maxitns)
+#                 swnstr1.output(f'../../geometry/output_locations/', f'../../output/0/', f'eps0_level{l}_sample{sample_number}')
+#                 swnstr1.write_to_file("P:\\1230882-emodnet_hrsm\\vanCas\\Ensemble_Forecast\\input\\0")
+
