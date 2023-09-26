@@ -10,8 +10,7 @@ write SWAN input files based on that data, and process the results. More specifi
 **Folder structure**
 In order for ensemble forecasts to work on your computer, your files have to be ordered in a very specific way. A diagram is shown below:
 
-                  boundary_conditions
-                /
-Master folder --- geometry
-                \
-                  EPSruns
+- jij
+- kokok
+- kokok
+    - subitem
