@@ -31,9 +31,13 @@ def write_swaninit(path, max_input_files=999, print_name="PRINT", input_name="IN
         f = open(path + "swaninit", 'x')
         f.write(string)
     except FileExistsError:
-        print("Warning: overwriting other swaninit file")
-        f = open(path + "swaninit", 'w')
-        f.write(string)
+        overwrite = input("Warning: overwriting other swaninit file. Continue [y/n]?")
+        if overwrite = 'y':
+            print("Overwriting")
+            f = open(path + "swaninit", 'w')
+            f.write(string)
+        else:
+            print("Cancelled")
 
 
 
