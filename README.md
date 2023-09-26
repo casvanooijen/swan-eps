@@ -7,7 +7,7 @@ write SWAN input files based on that data, and process the results. More specifi
 * **construct_SWAN_case.ipynb** (not present yet):  example Jupyter notebook showing how one would go about constructing SWAN input based on ECMWF data using the tools in this repository;
 * Example SWAN input and output to compare results:  wind input ensemble in boundary_conditions/meteo and boundary data in boundary_conditions/waves; bottom topography and output locations in geometry.
 
-**Folder structure**
+**FOLDER STRUCTURE**
 
 In order for ensemble forecasts to work on your computer, your files have to be ordered in a very specific way. Inside a master folder, the following folders should be present:
 
@@ -28,7 +28,7 @@ In order for ensemble forecasts to work on your computer, your files have to be 
         * ...       
     * ...
  
-**File naming conventions**
+**FILE-NAMING CONVENTIONS**
 
 The code in this repository assumes certain conventions when it comes to the naming of files. These conventions are collected below.
 
