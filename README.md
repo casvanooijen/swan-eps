@@ -8,9 +8,11 @@ write SWAN input files based on that data, and process the results. More specifi
 - Example SWAN input and output to compare results:  wind input ensemble in boundary_conditions/meteo and boundary data in boundary_conditions/waves; bottom topography and output locations in geometry.
 
 **Folder structure**
-In order for ensemble forecasts to work on your computer, your files have to be ordered in a very specific way. A diagram is shown below:
+In order for ensemble forecasts to work on your computer, your files have to be ordered in a very specific way. Inside a master folder, the following folders should be present:
 
-- jij
-- kokok
-- kokok
-    - subitem
+- boundary_conditions:
+      - meteo: contains ECMWF wind ensemble in netcdf-format compatible with SWAN; functions are available in file_tools.py to convert from ECMWF wind data to SWAN input;
+      - waves: contains *.tpar files for nonstationary boundary condition data at all boundary points.
+- geometry:
+      - bottom topography file: *.bot-file defining the bottom level of your domain;
+      - output_locations: contains files defining the output locations for which SWAN will return energy density spectrum data;
