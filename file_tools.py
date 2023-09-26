@@ -5,6 +5,36 @@ import postprocess_tools as ppt
 from ecmwfapi import ECMWFDataServer
 
 
+## MISCELLANEOUS ##
+
+def write_swaninit(path, max_input_files=999, print_name="PRINT", input_name="INPUT"):
+    """Writes a swaninit file to path.
+    
+    - path (str):               path to which swaninit will be written;
+    - max_input_files (int):    maximum number of allowed input files in *.swn-files
+    """
+    num_spaces = 5 - len(str(max_input_files))
+    num_spaces_print = 40 - len(print_name)
+    num_spaces_input = 40 - len(input_name)
+    string = "    4                                   version of initialisation file\nDelft University of Technology          name of institute\n"
+    string += f"    3                                   command file ref. number\n{input_name}" + num_spaces_input*" " + "input file name\n"
+    string += f"    4                                   print file ref. number\n{print_name}" + num_spaces_print*" " + "print file name\n"
+    string += f"    4                                   test file ref. number\n" + 40*" " + "test file name\n"
+    string += f"    6                                   screen ref. number\n" + num_spaces * " " + f"{max_input_files}" + 35*" " + "highest file ref. number\n"
+    string += f"$                                       comment identifier\n" + 43*" " + "TAB character\n"
+    string += f"\\                                       dir sep char in input file\n/" + 39*" " + "dir sep char replacing previous one\n"
+    string += f"    1                                   default time coding option"
+
+    try:
+        f = open(path + "swaninit", 'x')
+        f.write(string)
+    except FileExistsError:
+        print("Warning: overwriting other swaninit file")
+        f = open(path + "swaninit", 'w')
+        f.write(string)
+
+
+
 ## BUILD UP *.SWN INPUT FILES ##
 
 class Swanstring(object):
