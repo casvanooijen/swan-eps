@@ -11,7 +11,9 @@ def write_swaninit(path, max_input_files=999, print_name="PRINT", input_name="IN
     """Writes a swaninit file to path.
     
     - path (str):               path to which swaninit will be written;
-    - max_input_files (int):    maximum number of allowed input files in *.swn-files
+    - max_input_files (int):    maximum number of allowed input files in *.swn-files;
+    - print_name (str):         name of the print-file that SWAN generates;
+    - input_name (str):         name of the input-file that SWAN uses;
     """
     num_spaces = 5 - len(str(max_input_files))
     num_spaces_print = 40 - len(print_name)
