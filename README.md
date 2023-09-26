@@ -8,6 +8,7 @@ write SWAN input files based on that data, and process the results. More specifi
 * Example SWAN input and output to compare results:  wind input ensemble in boundary_conditions/meteo and boundary data in boundary_conditions/waves; bottom topography and output locations in geometry.
 
 **Folder structure**
+
 In order for ensemble forecasts to work on your computer, your files have to be ordered in a very specific way. Inside a master folder, the following folders should be present:
 
 * boundary_conditions:
@@ -16,3 +17,7 @@ In order for ensemble forecasts to work on your computer, your files have to be 
 * geometry:
     * bottom topography file: *.bot-file defining the bottom level of your domain;
     * output_locations: contains files defining the output locations for which SWAN will return energy density spectrum data;
+* EPSruns:
+    * {run1}
+    * {run2}
+    * ...
