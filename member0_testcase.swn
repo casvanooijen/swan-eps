@@ -18,7 +18,7 @@ CGRID REGULAR -12 48 0.000000 21.000000 16.000000 420 480 CIRCLE 45 0.03 0.60000
 INP BOTTOM REGULAR  -12 48 0.000000 420 480 0.050000 0.033333 EXCE -999
 READ BOTTOM 1. '../../geometry/swan-ns-j22_6-v1a_adjust.bot' idla=5 FREE
 
-INPGRID WIND REGF '../../boundary_conditions/meteo/forecast_2013-12-04/stormxaver_wind_12040.nc' NONSTAT 20131203.000000 1 HR 20131209.000000
+INPGRID WIND REGF '../../boundary_conditions/meteo/forecast_2013-12-04/stormxaver_wind_12040.nc' NONSTAT 20131204.000000 1 HR 20131209.000000
 READINP WIND 1.0 '../../boundary_conditions/meteo/forecast_2013-12-04/stormxaver_wind_12040.nc'
 
 !******************  BOUNDARY CONDITIONS  **************
@@ -151,13 +151,13 @@ POINTS 'PM'    FILE '../../geometry/output_locations/MDB.xyn'
 BLOCK 'COMPGRID' NOHEAD  '../output/swan2d_stormxaver1204.nc' LAYOUT 3 &
  XP YP HSIG BOTLEV HSWELL TMM10 TPS DIR DSPR WIND OUT 20131203.000000 1 HR
 
-SPECOUT 'P1'    SPEC1D ABS '../output/swan-ns_spec1d_p1_stormxaver1204.nc' 	    OUT 20131203.000000 1 HR
-SPECOUT 'P2'    SPEC2D ABS '../output/swan-ns_spec2d_p2_stormxaver1204.nc'         OUT 20131203.000000 1 HR
-SPECOUT 'KS'    SPEC2D ABS '../output/swan-ns_spec2d_ks_stormxaver1204.nc'         OUT 20131203.000000 1 HR
-SPECOUT 'PM'    SPEC2D ABS '../output/swan-ns_spec2d_pm_stormxaver1204.nc'         OUT 20131203.000000 1 HR
+SPECOUT 'P1'    SPEC1D ABS '../output/swan-ns_spec1d_p1_stormxaver1204.nc' 	    OUT 20131204.000000 1 HR
+SPECOUT 'P2'    SPEC2D ABS '../output/swan-ns_spec2d_p2_stormxaver1204.nc'         OUT 20131204.000000 1 HR
+SPECOUT 'KS'    SPEC2D ABS '../output/swan-ns_spec2d_ks_stormxaver1204.nc'         OUT 20131204.000000 1 HR
+SPECOUT 'PM'    SPEC2D ABS '../output/swan-ns_spec2d_pm_stormxaver1204.nc'         OUT 20131204.000000 1 HR
 
 TEST 1 0
 
-COMPUTE NONSTAT 20131203.000000 1 HR 20131209.000000
+COMPUTE NONSTAT 20131204.000000 1 HR 20131209.000000
 
 STOP
