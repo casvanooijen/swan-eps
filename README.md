@@ -35,5 +35,6 @@ The code in this repository assumes certain conventions when it comes to the nam
 * ***.tpar-files**: '\{chosen_name\}\_\{side\}\_\{index_starting_from_minimum\}.tpar'. Here, \{side\} is either 'w' (west), 'n' (north), 'e' (east) or 's' (south);
 * **Wind ensemble members**: '\{chosen_name\}\{sample_index\}.nc'. Note that there is no underscore between \{chosen_name\} and \{sample_index\};
 * **Standard ensemble forecast .swn-files**: '\{chosen_name\}\{sample_index\}.swn'. Again, there is no underscore between \{chosen_name\} and \{sample_index\};
-* **Multilevel Monte Carlo ensemble forecast .swn-files**: '\{chosen_name\}\_level\{level_index\}\_sample\{sample_index\}';
-* **Multilevel multifidelity Monte Carlo ensemble forecast .swn-files**: '\{chosen_name\}\_level\{level_index\}_\{fidelity\}\_sample\{sample_index\}';
+* **Multilevel Monte Carlo ensemble forecast .swn-files**: '\{chosen_name\}\_level\{level_index\}\_sample\{sample_index\}.swn';
+* **Multilevel multifidelity Monte Carlo ensemble forecast .swn-files**: '\{chosen_name\}\_level\{level_index\}_\{fidelity\}\_sample\{sample_index\}.swn'. Here, \{fidelity\} is either 'hi' or 'lo' to indicate high or low fidelity respectively;
+* **Nested multilevel Monte Carlo ensemble forecast .swn-files**: '\{chosen_name\}\_olevel\{outer_level_index\}\_ilevel\{inner_level_index\}\_sample\{sample_index\}.swn'
