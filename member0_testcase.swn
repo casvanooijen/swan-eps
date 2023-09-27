@@ -1,7 +1,7 @@
 !** pre-operational model version swan-ks (may 2023)
 !** for SWAN version 41.31A
 !******************  HEADING  ***************************
-PROJECT 'SWAN-TESTCASE' '1'
+PROJECT 'SWAN-EPS' '002'
 
 !******************  GENERAL  ***************************
 
@@ -16,117 +16,117 @@ COORDINATES SPHERICAL CCM
 CGRID REGULAR -12 48 0.000000 21.000000 16.000000 420 480 CIRCLE 45 0.03 0.600000
 
 INP BOTTOM REGULAR  -12 48 0.000000 420 480 0.050000 0.033333 EXCE -999
-READ BOTTOM 1. '../../geometry/swan-ns-j22_6-v1a_adjust.bot' idla=5 FREE
+READ BOTTOM 1. 'geometry/swan-ns-j22_6-v1a_adjust.bot' idla=5 FREE
 
-INPGRID WIND REGF '../../boundary_conditions/meteo/forecast_2013-12-04/stormxaver_wind_12040.nc' NONSTAT 20131204.000000 1 HR 20131209.000000
-READINP WIND 1.0 '../../boundary_conditions/meteo/forecast_2013-12-04/stormxaver_wind_12040.nc'
+INPGRID WIND REGF 'boundary_conditions/meteo/forecast_2013-12-04/stormxaver_wind_12040.nc' NONSTAT 20131204.000000 1 HR 20131209.000000
+READINP WIND 1.0 'boundary_conditions/meteo/forecast_2013-12-04/stormxaver_wind_12040.nc'
 
 !******************  BOUNDARY CONDITIONS  **************
 
 BOUND SHAPESPEC JONSWAP PEAK DSPR DEGREES
 
 BOUNDSPEC SIDE W CCW VARIABLE FILE &
-0.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_0.tpar' 1 & 
-0.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_1.tpar' 1 & 
-1.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_2.tpar' 1 & 
-1.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_3.tpar' 1 & 
-2.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_4.tpar' 1 & 
-2.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_5.tpar' 1 & 
-3.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_6.tpar' 1 & 
-3.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_7.tpar' 1 & 
-4.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_8.tpar' 1 & 
-4.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_9.tpar' 1 & 
-5.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_10.tpar' 1 & 
-5.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_11.tpar' 1 & 
-6.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_12.tpar' 1 & 
-6.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_13.tpar' 1 & 
-7.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_14.tpar' 1 & 
-7.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_15.tpar' 1 & 
-8.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_16.tpar' 1 & 
-8.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_17.tpar' 1 & 
-9.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_18.tpar' 1 & 
-9.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_19.tpar' 1 & 
-10.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_20.tpar' 1 & 
-10.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_21.tpar' 1 & 
-11.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_22.tpar' 1 & 
-11.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_23.tpar' 1 & 
-12.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_24.tpar' 1 & 
-12.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_25.tpar' 1 & 
-13.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_26.tpar' 1 & 
-13.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_27.tpar' 1 & 
-14.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_28.tpar' 1 & 
-14.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_29.tpar' 1 & 
-15.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_30.tpar' 1 & 
-15.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_31.tpar' 1 & 
-16.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_32.tpar' 1 
+0.0 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_0.tpar' 1 & 
+0.5 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_1.tpar' 1 & 
+1.0 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_2.tpar' 1 & 
+1.5 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_3.tpar' 1 & 
+2.0 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_4.tpar' 1 & 
+2.5 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_5.tpar' 1 & 
+3.0 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_6.tpar' 1 & 
+3.5 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_7.tpar' 1 & 
+4.0 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_8.tpar' 1 & 
+4.5 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_9.tpar' 1 & 
+5.0 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_10.tpar' 1 & 
+5.5 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_11.tpar' 1 & 
+6.0 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_12.tpar' 1 & 
+6.5 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_13.tpar' 1 & 
+7.0 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_14.tpar' 1 & 
+7.5 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_15.tpar' 1 & 
+8.0 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_16.tpar' 1 & 
+8.5 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_17.tpar' 1 & 
+9.0 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_18.tpar' 1 & 
+9.5 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_19.tpar' 1 & 
+10.0 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_20.tpar' 1 & 
+10.5 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_21.tpar' 1 & 
+11.0 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_22.tpar' 1 & 
+11.5 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_23.tpar' 1 & 
+12.0 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_24.tpar' 1 & 
+12.5 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_25.tpar' 1 & 
+13.0 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_26.tpar' 1 & 
+13.5 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_27.tpar' 1 & 
+14.0 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_28.tpar' 1 & 
+14.5 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_29.tpar' 1 & 
+15.0 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_30.tpar' 1 & 
+15.5 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_31.tpar' 1 & 
+16.0 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_w_32.tpar' 1 
 
 BOUNDSPEC SIDE N CCW VARIABLE FILE &
-0.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_42.tpar' 1 & 
-0.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_41.tpar' 1 & 
-1.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_40.tpar' 1 & 
-1.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_39.tpar' 1 & 
-2.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_38.tpar' 1 & 
-2.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_37.tpar' 1 & 
-3.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_36.tpar' 1 & 
-3.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_35.tpar' 1 & 
-4.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_34.tpar' 1 & 
-4.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_33.tpar' 1 & 
-5.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_32.tpar' 1 & 
-5.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_31.tpar' 1 & 
-6.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_30.tpar' 1 & 
-6.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_29.tpar' 1 & 
-7.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_28.tpar' 1 & 
-7.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_27.tpar' 1 & 
-8.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_26.tpar' 1 & 
-8.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_25.tpar' 1 & 
-9.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_24.tpar' 1 & 
-9.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_23.tpar' 1 & 
-10.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_22.tpar' 1 & 
-10.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_21.tpar' 1 & 
-11.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_20.tpar' 1 & 
-11.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_19.tpar' 1 & 
-12.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_18.tpar' 1 & 
-12.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_17.tpar' 1 & 
-13.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_16.tpar' 1 & 
-13.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_15.tpar' 1 & 
-14.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_14.tpar' 1 & 
-14.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_13.tpar' 1 & 
-15.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_12.tpar' 1 & 
-15.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_11.tpar' 1 & 
-16.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_10.tpar' 1 & 
-16.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_9.tpar' 1 & 
-17.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_8.tpar' 1 & 
-17.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_7.tpar' 1 & 
-18.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_6.tpar' 1 & 
-18.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_5.tpar' 1 & 
-19.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_4.tpar' 1 & 
-19.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_3.tpar' 1 & 
-20.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_2.tpar' 1 & 
-20.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_1.tpar' 1 & 
-21.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_0.tpar' 1 
+0.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_42.tpar' 1 & 
+0.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_41.tpar' 1 & 
+1.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_40.tpar' 1 & 
+1.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_39.tpar' 1 & 
+2.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_38.tpar' 1 & 
+2.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_37.tpar' 1 & 
+3.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_36.tpar' 1 & 
+3.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_35.tpar' 1 & 
+4.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_34.tpar' 1 & 
+4.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_33.tpar' 1 & 
+5.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_32.tpar' 1 & 
+5.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_31.tpar' 1 & 
+6.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_30.tpar' 1 & 
+6.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_29.tpar' 1 & 
+7.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_28.tpar' 1 & 
+7.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_27.tpar' 1 & 
+8.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_26.tpar' 1 & 
+8.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_25.tpar' 1 & 
+9.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_24.tpar' 1 & 
+9.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_23.tpar' 1 & 
+10.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_22.tpar' 1 & 
+10.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_21.tpar' 1 & 
+11.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_20.tpar' 1 & 
+11.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_19.tpar' 1 & 
+12.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_18.tpar' 1 & 
+12.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_17.tpar' 1 & 
+13.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_16.tpar' 1 & 
+13.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_15.tpar' 1 & 
+14.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_14.tpar' 1 & 
+14.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_13.tpar' 1 & 
+15.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_12.tpar' 1 & 
+15.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_11.tpar' 1 & 
+16.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_10.tpar' 1 & 
+16.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_9.tpar' 1 & 
+17.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_8.tpar' 1 & 
+17.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_7.tpar' 1 & 
+18.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_6.tpar' 1 & 
+18.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_5.tpar' 1 & 
+19.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_4.tpar' 1 & 
+19.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_3.tpar' 1 & 
+20.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_2.tpar' 1 & 
+20.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_1.tpar' 1 & 
+21.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_n_0.tpar' 1 
 
 BOUNDSPEC SIDE E CCW VARIABLE FILE &
-9.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_e_13.tpar' 1 & 
-10.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_e_12.tpar' 1 & 
-16.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_e_0.tpar' 1 
+0.0 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_e_13.tpar' 1 & 
+0.5 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_e_12.tpar' 1 & 
+6.5 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_e_0.tpar' 1 
 
 BOUNDSPEC SIDE S CCW VARIABLE FILE &
-0.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_0.tpar' 1 & 
-0.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_1.tpar' 1 & 
-1.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_2.tpar' 1 & 
-1.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_3.tpar' 1 & 
-2.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_4.tpar' 1 & 
-2.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_5.tpar' 1 & 
-3.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_6.tpar' 1 & 
-3.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_7.tpar' 1 & 
-4.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_8.tpar' 1 & 
-4.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_9.tpar' 1 & 
-5.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_10.tpar' 1 & 
-5.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_11.tpar' 1 & 
-6.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_12.tpar' 1 & 
-6.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_13.tpar' 1 & 
-7.0 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_14.tpar' 1 & 
-7.5 '../../boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_15.tpar' 1 
+0.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_0.tpar' 1 & 
+0.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_1.tpar' 1 & 
+1.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_2.tpar' 1 & 
+1.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_3.tpar' 1 & 
+2.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_4.tpar' 1 & 
+2.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_5.tpar' 1 & 
+3.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_6.tpar' 1 & 
+3.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_7.tpar' 1 & 
+4.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_8.tpar' 1 & 
+4.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_9.tpar' 1 & 
+5.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_10.tpar' 1 & 
+5.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_11.tpar' 1 & 
+6.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_12.tpar' 1 & 
+6.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_13.tpar' 1 & 
+7.22 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_14.tpar' 1 & 
+7.72 'boundary_conditions/waves/boundary_condition_at_points/stormxaver_boundary_wavedata_s_15.tpar' 1 
 
 !******************  PHYSICS  **************************
 
@@ -143,18 +143,18 @@ PROP BSBT
 NUMERIC ACCUR DREL=0.02 DHOVAL=0.02 DTOVAL=0.02 NPNTS=98 NONSTAT MXITNS=20
 
 !******************  OUTPUT ******************************
-POINTS 'P1'    FILE '../../geometry/output_locations/swan-ns_1.xyn'
-POINTS 'P2'    FILE '../../geometry/output_locations/swan-ns_2.xyn'
-POINTS 'KS'    FILE '../../geometry/output_locations/bndloc_kuststrook.xyn'
-POINTS 'PM'    FILE '../../geometry/output_locations/MDB.xyn'
+POINTS 'P1'    FILE 'geometry/output_locations/swan-ns_1.xyn'
+POINTS 'P2'    FILE 'geometry/output_locations/swan-ns_2.xyn'
+POINTS 'KS'    FILE 'geometry/output_locations/bndloc_kuststrook.xyn'
+POINTS 'PM'    FILE 'geometry/output_locations/MDB.xyn'
 
-BLOCK 'COMPGRID' NOHEAD  '../output/swan2d_stormxaver1204.nc' LAYOUT 3 &
- XP YP HSIG BOTLEV HSWELL TMM10 TPS DIR DSPR WIND OUT 20131203.000000 1 HR
+BLOCK 'COMPGRID' NOHEAD  'swan2d_swan2d_stormxaver1204.nc' LAYOUT 3 &
+ XP YP HSIG BOTLEV HSWELL TMM10 TPS DIR DSPR WIND OUT 20131204.000000 1 HR
 
-SPECOUT 'P1'    SPEC1D ABS '../output/swan-ns_spec1d_p1_stormxaver1204.nc' 	    OUT 20131204.000000 1 HR
-SPECOUT 'P2'    SPEC2D ABS '../output/swan-ns_spec2d_p2_stormxaver1204.nc'         OUT 20131204.000000 1 HR
-SPECOUT 'KS'    SPEC2D ABS '../output/swan-ns_spec2d_ks_stormxaver1204.nc'         OUT 20131204.000000 1 HR
-SPECOUT 'PM'    SPEC2D ABS '../output/swan-ns_spec2d_pm_stormxaver1204.nc'         OUT 20131204.000000 1 HR
+SPECOUT 'P1'    SPEC1D ABS 'swan-ns_spec1d_p1_swan2d_stormxaver1204.nc' 	    OUT 20131204.000000 1 HR
+SPECOUT 'P2'    SPEC2D ABS 'swan-ns_spec2d_p2_swan2d_stormxaver1204.nc'         OUT 20131204.000000 1 HR
+SPECOUT 'KS'    SPEC2D ABS 'swan-ns_spec2d_ks_swan2d_stormxaver1204.nc'         OUT 20131204.000000 1 HR
+SPECOUT 'PM'    SPEC2D ABS 'swan-ns_spec2d_pm_swan2d_stormxaver1204.nc'         OUT 20131204.000000 1 HR
 
 TEST 1 0
 
