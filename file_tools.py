@@ -122,13 +122,15 @@ class Swanstring(object):
             self.string += f"INITIAL HOTSTART '{hotstart}' NETCDF\n\n"
 
 
-    def boundary_condition_tpar(self, wavefield, tpar_fname, directory, tpar_swan_path, direction_param_type='PEAK'):
+    def boundary_condition_tpar(self, wavefield, tpar_fname, directory, tpar_swan_path, xnums, ynums, direction_param_type='PEAK'):
         """Adds (non-stationary) boundary condition commands to the text using *.tpar-files.
 
         - wavefield (xArray Dataset):   dataset from which the *.tpar-files were generated;
         - tpar_fname (str):             naming convention of the *.tpar-files (without '_{side}_{index}.tpar');
         - directory (str):              directory in which the *.tpar-files can be found;       
         - tpar_swan_path (str):         directory in which the *.tpar-files can be found as one would write it in a *.swn-input file;
+        - xnums (int):                  number of grid cells in longitudinal direction;
+        - ynums (int):                  number of grid cells in latitudinal direction;
         - direction_param_type (str):   type of direction parameter used ('PEAK' (default) or 'MEAN')        
         """
         
@@ -138,53 +140,83 @@ class Swanstring(object):
 
         lon = wavefield['longitude']
         lat = wavefield['latitude']
+
+        lon_mesh = lon.values[1] - lon.values[0] # assuming regular grid
+        lat_mesh = lat.values[1] - lat.values[0]
+
+        comp_lon_mesh = 21 / xnums # geographical domain from -12 to 9 longitude
+        comp_lat_mesh = 16 / ynums # geographical domain from 48 to 64 latitude
+
+        lon_start_offset = np.round(0.5 * (lon_mesh - comp_lon_mesh), 2) # boundary point should be placed with a slight offset if the grid of the boundary wavefield is coarser
+        if lon_start_offset < 0:
+            lon_start_offset = 0
+        lat_start_offset = np.round(0.5 * (lat_mesh - comp_lat_mesh), 2)
+        if lat_start_offset < 0:
+            lat_start_offset = 0
         
         # West boundary
         # the following line assumes that at least one boundary point has boundary data
+        passed_starting_point = False
         self.string += f'BOUNDSPEC SIDE W CCW VARIABLE FILE &\n'
         for i in range(lat.values.shape[0]):
             dist = np.amax(lat.values) - lat.values[i]
 
             if os.path.isfile(directory+f'{tpar_fname}_w_{i}.tpar'):
-                self.string += f"{dist} '{tpar_swan_path}{tpar_fname}_w_{i}.tpar' 1 & \n"
+                if not passed_starting_point:
+                    starting_latitude = lat.values[i]
+                    passed_starting_point = True
+
+                self.string += f"{dist - (np.amax(lat.values)-starting_latitude) + lat_start_offset} '{tpar_swan_path}{tpar_fname}_w_{i}.tpar' 1 & \n"
 
             if i == lat.values.shape[0] - 1:
                 self.string = self.string[:-3] + '\n\n'
             
         
         # North boundary
+        passed_starting_point = False
         self.string += f'BOUNDSPEC SIDE N CCW VARIABLE FILE &\n'
         for i in range(lon.values.shape[0]):
             j = lon.values.shape[0] - 1 - i # make sure [len]-parameters appear in increasing order
             dist = np.amax(lon.values) - lon.values[j]
 
             if os.path.isfile(directory+f'{tpar_fname}_n_{j}.tpar'):
-                self.string += f"{dist} '{tpar_swan_path}{tpar_fname}_n_{j}.tpar' 1 & \n"
+                if not passed_starting_point:
+                    starting_longitude = lon.values[j]
+                    passed_starting_point = True
+                self.string += f"{dist - (np.amax(lon.values)-starting_longitude) + lon_start_offset} '{tpar_swan_path}{tpar_fname}_n_{j}.tpar' 1 & \n"
                 
             if i == lon.values.shape[0] - 1:
                 self.string = self.string[:-3] + '\n\n'
             
 
         # East boundary
+        passed_starting_point = False
         self.string += f'BOUNDSPEC SIDE E CCW VARIABLE FILE &\n'
         for i in range(lat.values.shape[0]):
             j = lat.values.shape[0] - i - 1
             dist = lat.values[j] - np.amin(lat.values)
 
             if os.path.isfile(directory+f'{tpar_fname}_e_{j}.tpar'):
-                self.string += f"{dist} '{tpar_swan_path}{tpar_fname}_e_{j}.tpar' 1 & \n"
+                if not passed_starting_point:
+                    starting_latitude = lat.values[j]
+                    passed_starting_point = True
+                self.string += f"{dist - (starting_latitude-np.amin(lat.values)) + lat_start_offset} '{tpar_swan_path}{tpar_fname}_e_{j}.tpar' 1 & \n"
             
             if i == lat.values.shape[0] - 1:
                 self.string = self.string[:-3] + '\n\n'
     
 
         # South boundary
+        passed_starting_point = False
         self.string += f'BOUNDSPEC SIDE S CCW VARIABLE FILE &\n'
         for i in range(lon.values.shape[0]):
             dist = lon.values[i] - np.amin(lon.values)
             
             if os.path.isfile(directory+f'{tpar_fname}_s_{i}.tpar'):
-                self.string += f"{dist} '{tpar_swan_path}{tpar_fname}_s_{i}.tpar' 1 & \n"
+                if not passed_starting_point:
+                    starting_longitude = lon.values[i]
+                    passed_starting_point = True
+                self.string += f"{dist - (starting_longitude -np.amin(lon.values))+ lon_start_offset} '{tpar_swan_path}{tpar_fname}_s_{i}.tpar' 1 & \n"
                 
             if i == lon.values.shape[0] - 1:
                 self.string = self.string[:-3] + '\n\n'
@@ -1382,7 +1414,7 @@ class ecmwfdata:
         peak_dir_values = np.where(maximum_hs != 3, peak_dir_values, dirswe3)
 
         ## WRITE *.TPAR-FILES ##
-
+        
         # West boundary
         for i in range(lat.values.shape[0]):
             if np.isnan(hstotal[0, i, 0]) or np.isnan(per[0,i,0]) or np.isnan(dspr[0,i,0]) or np.isnan(peak_dir_values[0,i,0]): # Don't create a *.tpar-file if current pixel is a dry pixel
