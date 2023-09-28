@@ -148,13 +148,13 @@ POINTS 'P2'    FILE 'geometry/output_locations/swan-ns_2.xyn'
 POINTS 'KS'    FILE 'geometry/output_locations/bndloc_kuststrook.xyn'
 POINTS 'PM'    FILE 'geometry/output_locations/MDB.xyn'
 
-BLOCK 'COMPGRID' NOHEAD  'swan2d_swan2d_stormxaver1204.nc' LAYOUT 3 &
+BLOCK 'COMPGRID' NOHEAD  'swan2d_stormxaver1204.nc' LAYOUT 3 &
  XP YP HSIG BOTLEV HSWELL TMM10 TPS DIR DSPR WIND OUT 20131204.000000 1 HR
 
-SPECOUT 'P1'    SPEC1D ABS 'swan-ns_spec1d_p1_swan2d_stormxaver1204.nc' 	    OUT 20131204.000000 1 HR
-SPECOUT 'P2'    SPEC2D ABS 'swan-ns_spec2d_p2_swan2d_stormxaver1204.nc'         OUT 20131204.000000 1 HR
-SPECOUT 'KS'    SPEC2D ABS 'swan-ns_spec2d_ks_swan2d_stormxaver1204.nc'         OUT 20131204.000000 1 HR
-SPECOUT 'PM'    SPEC2D ABS 'swan-ns_spec2d_pm_swan2d_stormxaver1204.nc'         OUT 20131204.000000 1 HR
+SPECOUT 'P1'    SPEC1D ABS 'swan-ns_spec1d_p1_stormxaver1204.nc' 	    OUT 20131204.000000 1 HR
+SPECOUT 'P2'    SPEC2D ABS 'swan-ns_spec2d_p2_stormxaver1204.nc'         OUT 20131204.000000 1 HR
+SPECOUT 'KS'    SPEC2D ABS 'swan-ns_spec2d_ks_stormxaver1204.nc'         OUT 20131204.000000 1 HR
+SPECOUT 'PM'    SPEC2D ABS 'swan-ns_spec2d_pm_stormxaver1204.nc'         OUT 20131204.000000 1 HR
 
 TEST 1 0
 
