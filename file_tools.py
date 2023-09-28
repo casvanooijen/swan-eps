@@ -141,8 +141,8 @@ class Swanstring(object):
         lon = wavefield['longitude']
         lat = wavefield['latitude']
 
-        lon_mesh = lon.values[1] - lon.values[0] # assuming regular grid
-        lat_mesh = lat.values[1] - lat.values[0]
+        lon_mesh = abs(lon.values[1] - lon.values[0]) # assuming regular grid
+        lat_mesh = abs(lat.values[1] - lat.values[0])
 
         comp_lon_mesh = 21 / xnums # geographical domain from -12 to 9 longitude
         comp_lat_mesh = 16 / ynums # geographical domain from 48 to 64 latitude
