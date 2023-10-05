@@ -10,6 +10,11 @@ from skimage.restoration import inpaint
 
 
 def RMSE(arr1, arr2):
+    """Returns L^2-error between arr1 and arr2.
+    
+    arr1 (xArray DataArray):    array 1;
+    arr2 (xArray DataArray):    array 2;
+    """
     effective_size = np.count_nonzero(~np.isnan((arr1-arr2).values))
     square_sum = np.nansum(np.power((arr1.values-arr2.values),2))
     return np.sqrt(square_sum/effective_size)
@@ -82,8 +87,8 @@ class plot:
         if mode == 'angle':
             angle_rad = np.radians(quantity[::stride, ::stride])
 
-            quiv = ax.quiver(lon_quiver, lat_quiver, np.cos(angle_rad), np.sin(angle_rad), pivot='middle', color=color, 
-                            zorder=3)
+            quiv = ax.quiver(lon_quiver, lat_quiver, -np.sin(angle_rad), -np.cos(angle_rad), pivot='middle', color=color, 
+                            zorder=3) #switch to cartesian convention
         elif mode == 'vector':
             magnitude = np.sqrt(np.power(quantity[0].values, 2) + np.power(quantity[1].values, 2))
             norm_x = quantity[0].values / magnitude
@@ -111,9 +116,9 @@ class plot:
         lon_index = np.argmin(np.absolute(lon.values - np.full(lon.shape, poi_lon)))
         lat_index = np.argmin(np.absolute(lat.values - np.full(lat.shape, poi_lat)))
         if label:
-            ax.plot(time, qoi[:,lon_index, lat_index], label=label, color=color)
+            ax.plot(time, qoi[:,lat_index, lon_index], label=label, color=color)
         else:
-            ax.plot(time, qoi[:,lon_index, lat_index], color=color)
+            ax.plot(time, qoi[:,lat_index, lon_index], color=color)
         ax.set_xlabel('Time')
         if quantitystr:
             ax.set_ylabel(quantitystr)
@@ -303,7 +308,7 @@ class predict_computational_cost:
 
     @staticmethod
     def MLMF_time(numeval_list_hi, numeval_list_lo, runtime_array):
-        return ML_time(numeval_list_hi, runtime_array[:,0]) + ML_time(numeval_list_lo, runtime_array[:,1])
+        return predict_computational_cost.ML_time(numeval_list_hi, runtime_array[:,0]) + predict_computational_cost.ML_time(numeval_list_lo, runtime_array[:,1])
     
 ##################################################################################################
 
@@ -466,15 +471,25 @@ class estimate:
         if output_vars is None:
             output_vars = first_member.keys()
 
-        # Initialize ensemble mean data
+        # # Initialize ensemble mean data
+        # data_coords = dict()
+        # for dim in first_member.dims:
+        #     data_coords[dim] = first_member[dim]
 
-        data_coords = dict()
-        for dim in first_member.dims:
-            data_coords[dim] = first_member[dim]
+        # print(first_member.dims.tolist())
+        # print(first_member)
+
+        time = xr.DataArray(first_member['time'].values, dims=('time'), name='time')
+        latitude = xr.DataArray(first_member['latitude'].values, dims=('latitude'), name='latitude')
+        longitude = xr.DataArray(first_member['longitude'].values, dims=('longitude'), name='longitude')
+
+        time.attrs = first_member['time'].attrs
+        latitude.attrs = first_member['latitude'].attrs
+        longitude.attrs = first_member['longitude'].attrs
 
         data = {}
         for variable in output_vars:
-            data[variable] = xr.DataArray(np.zeros(first_member[variable].values.shape), dims = tuple(first_member.dims), coords = data_coords, name=variable)
+            data[variable] = xr.DataArray(np.zeros(first_member[variable].values.shape), dims = ('time', 'latitude', 'longitude'), coords = {'time': time, 'latitude': latitude, 'longitude': longitude}, name=variable)
             data[variable].attrs = first_member[variable].attrs
 
         ensemble_mean = xr.Dataset(copy.deepcopy(data))
