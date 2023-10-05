@@ -40,6 +40,24 @@ def write_swaninit(path, max_input_files=999, print_name="PRINT", input_name="IN
             print("Cancelled")
 
 
+def create_empty_file(path, fname):
+    """Creates an empty file (ASCII) with user-chosen extension.
+    
+    - path (str):   path to which the empty file will be written;
+    - fname (str):  name of the file (with extension if necessary).
+    """
+    try:
+        f = open(path + fname, 'x')
+        f.write('')
+    except FileExistsError:
+        overwrite = input("Warning: overwriting other swaninit file. Continue [y/n]?")
+        if overwrite == 'y':
+            print("Overwriting")
+            f = open(path + fname, 'w')
+            f.write('')
+        else:
+            print("Cancelled")
+
 
 ## BUILD UP *.SWN INPUT FILES ##
 
@@ -166,7 +184,7 @@ class Swanstring(object):
                     starting_latitude = lat.values[i]
                     passed_starting_point = True
 
-                self.string += f"{dist - (np.amax(lat.values)-starting_latitude) + lat_start_offset} '{tpar_swan_path}{tpar_fname}_w_{i}.tpar' 1 & \n"
+                self.string += f"{np.round(dist - (np.amax(lat.values)-starting_latitude) + lat_start_offset, 2)} '{tpar_swan_path}{tpar_fname}_w_{i}.tpar' 1 & \n"
 
             if i == lat.values.shape[0] - 1:
                 self.string = self.string[:-3] + '\n\n'
@@ -183,7 +201,7 @@ class Swanstring(object):
                 if not passed_starting_point:
                     starting_longitude = lon.values[j]
                     passed_starting_point = True
-                self.string += f"{dist - (np.amax(lon.values)-starting_longitude) + lon_start_offset} '{tpar_swan_path}{tpar_fname}_n_{j}.tpar' 1 & \n"
+                self.string += f"{np.round(dist - (np.amax(lon.values)-starting_longitude) + lon_start_offset, 2)} '{tpar_swan_path}{tpar_fname}_n_{j}.tpar' 1 & \n"
                 
             if i == lon.values.shape[0] - 1:
                 self.string = self.string[:-3] + '\n\n'
@@ -200,7 +218,7 @@ class Swanstring(object):
                 if not passed_starting_point:
                     starting_latitude = lat.values[j]
                     passed_starting_point = True
-                self.string += f"{dist - (starting_latitude-np.amin(lat.values)) + lat_start_offset} '{tpar_swan_path}{tpar_fname}_e_{j}.tpar' 1 & \n"
+                self.string += f"{np.round(dist - (starting_latitude-np.amin(lat.values)) + lat_start_offset, 2)} '{tpar_swan_path}{tpar_fname}_e_{j}.tpar' 1 & \n"
             
             if i == lat.values.shape[0] - 1:
                 self.string = self.string[:-3] + '\n\n'
@@ -216,7 +234,7 @@ class Swanstring(object):
                 if not passed_starting_point:
                     starting_longitude = lon.values[i]
                     passed_starting_point = True
-                self.string += f"{dist - (starting_longitude -np.amin(lon.values))+ lon_start_offset} '{tpar_swan_path}{tpar_fname}_s_{i}.tpar' 1 & \n"
+                self.string += f"{np.round(dist - (starting_longitude -np.amin(lon.values))+ lon_start_offset, 2)} '{tpar_swan_path}{tpar_fname}_s_{i}.tpar' 1 & \n"
                 
             if i == lon.values.shape[0] - 1:
                 self.string = self.string[:-3] + '\n\n'
@@ -306,8 +324,8 @@ class write_EPS_input:
             
     # Define paths and filenames
     bottom_path = '../../geometry/swan-ns-j22_6-v1a_adjust.bot'
-    wind_path_without_file_and_forecastdate = f'../../boundary_conditions/meteo/forecast_2013-12-' # forecast on December 4th 00:00:00
-    output_path = '../output/'
+    wind_path_without_file_and_forecastdate = f'../../boundary_conditions/meteo/forecast_2013-12-' 
+    output_path = '../../output/'
     output_locs_path = '../../geometry/output_locations/'
     tpar_filename = 'stormxaver_boundary_wavedata'
     tpar_swanpath = '../../boundary_conditions/waves/boundary_condition_at_points/'
@@ -334,7 +352,7 @@ class write_EPS_input:
         for n in range(ensemble_size):
             swnstring = Swanstring(fname + f'_sample{n}', "SWAN-EPS", ppt.string.int_to_threedigitstring(n), start_iso, end_iso, timestep)
             swnstring.input(xnums, ynums, write_EPS_input.bottom_path, windfile=write_EPS_input.wind_path_without_file_and_forecastdate + f'{start_iso[6:8]}/stormxaver_wind_1204{n}.nc', spec_lowerbound=spec_lowerbound)
-            swnstring.boundary_condition_tpar(write_EPS_input.era5wavefield, write_EPS_input.tpar_filename, write_EPS_input.tpar_directory, write_EPS_input.tpar_swanpath)
+            swnstring.boundary_condition_tpar(write_EPS_input.era5wavefield, write_EPS_input.tpar_filename, write_EPS_input.tpar_directory, write_EPS_input.tpar_swanpath, xnums, ynums)
             #../../***** means that the shell script is two folder levels deeper than the folder boundary_conditions or geometry
             swnstring.physics(generation=generation)
             swnstring.numerical_parameters(maxitns=maxitns)
@@ -343,36 +361,86 @@ class write_EPS_input:
 
     
     @staticmethod
-    def standard_sh(path, fname, ensemble_size = 50):
-        """Writes a *.sh-shell script to run a standard ensemble forecast on the Deltares h6-cluster. Path must be in the same folder as the *.swn input files and file must 
+    def standard_sh(path, fname, ensemble_size = 50, cluster='snellius'):
+        """Writes a *.sh-shell script to run a standard ensemble forecast on the Deltares h6-cluster or the Snellius supercomputer (SLURM). Path must be in the same folder as the *.swn input files and file must 
         have the same naming convention as the *.swn-files.
         
         - path (str):           path to which the *.sh-file will be written;
         - fname (str):  	    name of the *.sh-file without extension. Must be the same as the corresponding *.swn-files;
-        - ensemble_size (int):  number of available ensemble members.
+        - ensemble_size (int):  number of available ensemble members;
+        - cluster (str):        h6 or snellius;
         """
-        # Initial text
-        filestring = f"#!/bin/sh\n\n#$ -cwd\n\n#$ -q normal-e3-c7\n\n#$ -N {fname}\n\n\n"
-        # Load modules
-        filestring += f"module load swan/41.31A.1_intel18.0.3_timers\nswan_omp_exe=swan_omp.exe\n\nexport OMP_NUM_THREADS=4"
-        filestring += "echo ----------------------------------------------------------------------\n"
-        filestring += "echo Run of\n"
-        filestring += "echo $swan_omp_exe\n"
-        filestring += "echo with OpenMP on linux-cluster.\n"
-        filestring += "echo SGE_O_WORKDIR : $SGE_O_WORKDIR\n"
-        filestring += "echo HOSTNAME : $HOSTNAME\n"
-        filestring += "echo OMP_NUM_THREADS : $OMP_NUM_THREADS\n"
-        filestring += "echo ----------------------------------------------------------------------\n\n"
+        if cluster == 'h6':
+            # Initial text
+            filestring = f"#!/bin/sh\n\n#$ -cwd\n\n#$ -q normal-e3-c7\n\n#$ -N {fname}\n\n\n"
+            # Load modules
+            filestring += f"module load swan/41.31A.1_intel18.0.3_timers\nswan_omp_exe=swan_omp.exe\n\nexport OMP_NUM_THREADS=4"
+            filestring += "echo ----------------------------------------------------------------------\n"
+            filestring += "echo Run of\n"
+            filestring += "echo $swan_omp_exe\n"
+            filestring += "echo with OpenMP on linux-cluster.\n"
+            filestring += "echo SGE_O_WORKDIR : $SGE_O_WORKDIR\n"
+            filestring += "echo HOSTNAME : $HOSTNAME\n"
+            filestring += "echo OMP_NUM_THREADS : $OMP_NUM_THREADS\n"
+            filestring += "echo ----------------------------------------------------------------------\n\n"
 
-        for n in range(ensemble_size):
-            filestring += f"### Run {n}\n\n"
-            filestring += f"cp {fname}_sample{n}.swn INPUT\n"
-            filestring += "$swan_omp_exe\n"
-            filestring += f"cp PRINT {fname}_sample{n}.prt\n\n"
-            filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
+            for n in range(ensemble_size):
+                filestring += f"### Run {n}\n\n"
+                filestring += f"cp {fname}_sample{n}.swn INPUT\n"
+                filestring += "$swan_omp_exe\n"
+                filestring += f"cp PRINT {fname}_sample{n}.prt\n\n"
+                filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
 
-        f = open(path + fname + '.sh', 'x')
-        f.write(filestring)
+            f = open(path + fname + '.sh', 'x')
+            f.write(filestring)
+        elif cluster == 'snellius':
+            # Initial text
+            filestring = '#! /bin/bash\n'
+
+            nodes = int(input("How many nodes do you want to use? "))
+            cores = int(input("How many cores per task (max. 192)? "))
+            exptime = input("Expected duration (hh:mm:ss). ")
+
+            filestring += f"#SBATCH --nodes={nodes}\n"
+            filestring += f"#SBATCH --ntasks={ensemble_size}\n"
+            filestring += f"#SBATCH --cpus-per-task={cores}\n"
+            filestring += f"#SBATCH --job-name={fname}\n"
+            filestring += f"#SBATCH --time={exptime}\n"
+            filestring += "#SBATCH --partition=genoa\n"
+            filestring += "runid=$1\n\n"
+
+            # Load modules
+            filestring += "module purge\nmodule load 2022\nmodule load GCC/11.3.0\nmodule load GCCcore/11.3.0\n\n"
+
+            num_extra_core_tasks = (ensemble_size*cores) % 16 # SURF charges per 16 cores, so you throw away money if you don't distribute some remaining cores among the tasks
+            if num_extra_core_tasks == 0:
+                filestring += f"set -e\n\nnthreads={cores}\n\n"
+            else:
+                filestring += f"set -e\n\nnthreads={cores}\nnthreads_hi={cores + 1}\n\n"
+
+            for n in range(ensemble_size):
+                filestring += f"# SAMPLE {n}\n"
+                filestring += f"cd {fname}_sample{n}\n"
+                if n < num_extra_core_tasks:
+                    filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads_hi ./../../swanrun_deltares41_45_2 -input "{fname}_sample{n}" -omp $nthreads_hi &\n'
+                    filestring += f"cd -\necho swanrun_deltares41_45_2 -input {fname}_sample{n}.swn -omp $nthreads_hi\n\n"
+                else:
+                    filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads ./../../swanrun_deltares41_45_2 -input "{fname}_sample{n}" -omp $nthreads &\n'
+                    filestring += f"cd -\necho swanrun_deltares41_45_2 -input {fname}_sample{n}.swn -omp $nthreads\n\n"
+
+            filestring += "wait"
+
+            try:
+                f = open(path + fname + '.sh', 'x')
+                f.write(filestring)
+            except FileExistsError:
+                overwrite = input("Warning: overwriting other file. Continue [y/n]?")
+                if overwrite == 'y':
+                    print("Overwriting")
+                    f = open(path + fname + '.sh', 'w')
+                    f.write(filestring)
+                else:
+                    print("Cancelled")
 
 
     @staticmethod
@@ -417,7 +485,7 @@ class write_EPS_input:
                 sample_number = n
                 swnstring = Swanstring(fname + f'_level0_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(n), start_iso, end_iso, timestep)
                 swnstring.input(105, 120, bottom_path, windfile=wind_path_without_file + f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=spec_lowerbound)
-                swnstring.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                swnstring.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105, 120)
                 swnstring.physics(generation=generation)
                 swnstring.numerical_parameters(maxitns=maxitns)
                 swnstring.output(output_locs_path, output_path, fname + f'_level0_sample{sample_number}')
@@ -435,8 +503,8 @@ class write_EPS_input:
                     swnstring_lo.input(105 * (2**(l-1)), 120 * (2**(l-1)), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=spec_lowerbound)
                     swnstring_hi.input(105 * (2**l), 120 * (2**l), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=spec_lowerbound)
 
-                    swnstring_lo.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
-                    swnstring_hi.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                    swnstring_lo.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105 * (2**(l-1)), 120 * (2**(l-1)))
+                    swnstring_hi.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105 * (2**l), 120 * (2**l))
 
                     swnstring_lo.physics(generation=generation)
                     swnstring_hi.physics(generation=generation)
@@ -452,55 +520,135 @@ class write_EPS_input:
 
 
     @staticmethod
-    def ML_sh(path, fname, N_list):
+    def ML_sh(path, fname, N_list, cluster='snellius'):
         """Writes a *.sh-shell script to run a multilevel Monte Carlo ensemble forecast on the Deltares h6 cluster. Path must be in the same folder as the *.swn input files and file must 
         have the same naming convention as the *.swn-files.
         
         - path (str):       path to which the *.sh-file will be written;
         - fname (str):      name of the *.sh-file without extension. Must be the same as the corresponding *.swn-files;
-        - N_list (str):     values of N used in the multilevel Monte Carlo method.
+        - N_list (str):     values of N used in the multilevel Monte Carlo method;
+        - cluster (str):    h6 or snellius;
         """
-        # Initial text
-        filestring = f"#!/bin/sh\n\n#$ -cwd\n\n#$ -q normal-e3-c7\n\n#$ -N {fname}\n\n\n"
-        # Load modules
-        filestring += f"module load swan/41.31A.1_intel18.0.3_timers\nswan_omp_exe=swan_omp.exe\n\nexport OMP_NUM_THREADS=4"
-        filestring += "echo ----------------------------------------------------------------------\n"
-        filestring += "echo Run of\n"
-        filestring += "echo $swan_omp_exe\n"
-        filestring += "echo with OpenMP on linux-cluster.\n"
-        filestring += "echo SGE_O_WORKDIR : $SGE_O_WORKDIR\n"
-        filestring += "echo HOSTNAME : $HOSTNAME\n"
-        filestring += "echo OMP_NUM_THREADS : $OMP_NUM_THREADS\n"
-        filestring += "echo ----------------------------------------------------------------------\n\n"
 
-        # LEVEL 0
-        for n in range(N_list[0]):
-            sample_number = n
-            filestring += f"### LEVEL 0, SAMPLE {sample_number}\n\n"
-            filestring += f"cp {fname}_level0_sample{sample_number}.swn INPUT\n"
-            filestring += "$swan_omp_exe\n"
-            filestring += f"cp PRINT {fname}_level0_sample{sample_number}.prt\n"
-            filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
+        if cluster == 'h6':
+            # Initial text
+            filestring = f"#!/bin/sh\n\n#$ -cwd\n\n#$ -q normal-e3-c7\n\n#$ -N {fname}\n\n\n"
+            # Load modules
+            filestring += f"module load swan/41.31A.1_intel18.0.3_timers\nswan_omp_exe=swan_omp.exe\n\nexport OMP_NUM_THREADS=4"
+            filestring += "echo ----------------------------------------------------------------------\n"
+            filestring += "echo Run of\n"
+            filestring += "echo $swan_omp_exe\n"
+            filestring += "echo with OpenMP on linux-cluster.\n"
+            filestring += "echo SGE_O_WORKDIR : $SGE_O_WORKDIR\n"
+            filestring += "echo HOSTNAME : $HOSTNAME\n"
+            filestring += "echo OMP_NUM_THREADS : $OMP_NUM_THREADS\n"
+            filestring += "echo ----------------------------------------------------------------------\n\n"
 
-        # HIGHER LEVEL CORRECTIONS
-        for l in range(1, len(N_list)):
-            for n in range(N_list[l]):
-                sample_number = sum(N_list[:l]) + n
-                filestring += f"### LEVEL {l-1}, SAMPLE {sample_number}\n\n"
-                filestring += f"cp {fname}_level{l-1}_sample{sample_number}.swn INPUT\n"
+            # LEVEL 0
+            for n in range(N_list[0]):
+                sample_number = n
+                filestring += f"### LEVEL 0, SAMPLE {sample_number}\n\n"
+                filestring += f"cp {fname}_level0_sample{sample_number}.swn INPUT\n"
                 filestring += "$swan_omp_exe\n"
-                filestring += f"cp PRINT {fname}_level{l-1}_sample{sample_number}.prt\n"
+                filestring += f"cp PRINT {fname}_level0_sample{sample_number}.prt\n"
                 filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
-            for n in range(N_list[l]):
-                sample_number = sum(N_list[:l]) + n
-                filestring += f"### LEVEL {l}, SAMPLE {sample_number}\n\n"
-                filestring += f"cp {fname}_level{l}_sample{sample_number}.swn INPUT\n"
-                filestring += "$swan_omp_exe\n"
-                filestring += f"cp PRINT {fname}_level{l}_sample{sample_number}.prt\n"
-                filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
-        
-        f = open(path + fname + '.sh', 'x')
-        f.write(filestring)
+
+            # HIGHER LEVEL CORRECTIONS
+            for l in range(1, len(N_list)):
+                for n in range(N_list[l]):
+                    sample_number = sum(N_list[:l]) + n
+                    filestring += f"### LEVEL {l-1}, SAMPLE {sample_number}\n\n"
+                    filestring += f"cp {fname}_level{l-1}_sample{sample_number}.swn INPUT\n"
+                    filestring += "$swan_omp_exe\n"
+                    filestring += f"cp PRINT {fname}_level{l-1}_sample{sample_number}.prt\n"
+                    filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
+                for n in range(N_list[l]):
+                    sample_number = sum(N_list[:l]) + n
+                    filestring += f"### LEVEL {l}, SAMPLE {sample_number}\n\n"
+                    filestring += f"cp {fname}_level{l}_sample{sample_number}.swn INPUT\n"
+                    filestring += "$swan_omp_exe\n"
+                    filestring += f"cp PRINT {fname}_level{l}_sample{sample_number}.prt\n"
+                    filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
+            
+            f = open(path + fname + '.sh', 'x')
+            f.write(filestring)
+        elif cluster == 'snellius':
+            # Initial text
+            filestring = '#! /bin/bash\n'
+
+            numtasks = sum(ppt.predict_computational_costs.ML_numevals(N_list))
+
+            nodes = int(input("How many nodes do you want to use? "))
+            cores = int(input(f"There are {numtasks} tasks. How many cores per task (max. 192)? "))
+            exptime = input("Expected duration (hh:mm:ss). ")
+
+            filestring += f"#SBATCH --nodes={nodes}\n"
+            filestring += f"#SBATCH --ntasks={numtasks}\n"
+            filestring += f"#SBATCH --cpus-per-task={cores}\n"
+            filestring += f"#SBATCH --job-name={fname}\n"
+            filestring += f"#SBATCH --time={exptime}\n"
+            filestring += "#SBATCH --partition=genoa\n"
+            filestring += "runid=$1\n\n"
+
+            # Load modules
+            filestring += "module purge\nmodule load 2022\nmodule load GCC/11.3.0\nmodule load GCCcore/11.3.0\n\n"
+
+            num_extra_core_tasks = (numtasks*cores) % 16 # SURF charges per 16 cores, so you throw away money if you don't distribute some remaining cores among the tasks
+            if num_extra_core_tasks == 0:
+                filestring += f"set -e\n\nnthreads={cores}\n\n"
+            else:
+                filestring += f"set -e\n\nnthreads={cores}\nnthreads_hi={cores + 1}\n\n"
+
+            task_counter = 0
+            for n in range(N_list[0]):
+                sample_number = n
+                filestring += f"# LEVEL 0, SAMPLE {sample_number}\n"
+                filestring += f"cd {fname}_level0_sample{sample_number}\n"
+                if task_counter < num_extra_core_tasks:
+                    filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads_hi ./../../swanrun_deltares41_45_2 -input "{fname}_level0_sample{sample_number}" -omp $nthreads_hi & \n'
+                    filestring += f"cd -\necho swanrun_deltares41_45_2 -input {fname}_level0_sample{sample_number}.swn -omp $nthreads_hi\n\n"
+                else:
+                    filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads ./../../swanrun_deltares41_45_2 -input "{fname}_level0_sample{sample_number}" -omp $nthreads & \n'
+                    filestring += f"cd -\necho swanrun_deltares41_45_2 -input {fname}_level0_sample{sample_number}.swn -omp $nthreads\n\n"
+                task_counter += 1
+            
+            for l in range(1, len(N_list)):
+                for n in range(N_list[l]):
+                    sample_number = sum(N_list[:l]) + n
+                    filestring += f"# LEVEL {l-1}, SAMPLE {sample_number}\n"
+                    filestring += f"cd {fname}_level{l-1}_sample{sample_number}\n"
+                    if task_counter < num_extra_core_tasks:
+                        filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads_hi ./../../swanrun_deltares41_45_2 -input "{fname}_level{l-1}_sample{sample_number}" -omp $nthreads_hi & \n'
+                        filestring += f"cd -\necho swanrun_deltares41_45_2 -input {fname}_level{l-1}_sample{sample_number}.swn -omp $nthreads_hi\n\n"
+                    else:
+                        filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads ./../../swanrun_deltares41_45_2 -input "{fname}_level{l-1}_sample{sample_number}" -omp $nthreads & \n'
+                        filestring += f"cd -\necho swanrun_deltares41_45_2 -input {fname}_level{l-1}_sample{sample_number}.swn -omp $nthreads\n\n"
+                    task_counter += 1
+                for n in range(N_list[l]):
+                    sample_number = sum(N_list[:l]) + n
+                    filestring += f" LEVEL {l}, SAMPLE {sample_number}\n"
+                    filestring += f"cd {fname}_level{l}_sample{sample_number}\n"
+                    if task_counter < num_extra_core_tasks:
+                        filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads_hi ./../../swanrun_deltares41_45_2 -input "{fname}_level{l}_sample{sample_number}" -omp $nthreads_hi & \n'
+                        filestring += f"cd -\necho swanrun_deltares41_45_2 -input {fname}_level{l}_sample{sample_number}.swn -omp $nthreads_hi\n\n"
+                    else:
+                        filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads ./../../swanrun_deltares41_45_2 -input "{fname}_level{l}_sample{sample_number}" -omp $nthreads & \n'
+                        filestring += f"cd -\necho swanrun_deltares41_45_2 -input {fname}_level{l}_sample{sample_number}.swn -omp $nthreads\n\n"
+                    task_counter += 1
+
+            filestring += 'wait'
+
+            try:
+                f = open(path + fname + '.sh', 'x')
+                f.write(filestring)
+            except FileExistsError:
+                overwrite = input("Warning: overwriting other file. Continue [y/n]?")
+                if overwrite == 'y':
+                    print("Overwriting")
+                    f = open(path + fname + '.sh', 'w')
+                    f.write(filestring)
+                else:
+                    print("Cancelled")        
 
 
     @staticmethod
@@ -549,7 +697,7 @@ class write_EPS_input:
                 sample_number = n
                 swnstring = Swanstring(fname + f'_level0_hi_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                 swnstring.input(105, 120, bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=0.03)
-                swnstring.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                swnstring.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105, 120)
                 swnstring.physics(generation=generation)
                 swnstring.numerical_parameters(maxitns=20)
                 swnstring.output(output_locs_path, output_path, fname + f'_level0_hi_sample{sample_number}')
@@ -560,7 +708,7 @@ class write_EPS_input:
             for sample_number in ppt.estimate.used_sample_indices_MLMF(N_list, r_list, 0):
                 swnstring = Swanstring(fname + f'_level0_lo_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                 swnstring.input(105, 120, bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=0.06)
-                swnstring.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                swnstring.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105, 120)
                 swnstring.physics(generation=generation)
                 swnstring.numerical_parameters(maxitns=3)
                 swnstring.output(output_locs_path, output_path, fname + f'_level0_lo_sample{sample_number}')
@@ -579,8 +727,8 @@ class write_EPS_input:
                     swnstring_lowlevel.input(105 * (2**(l-1)), 120 * (2**(l-1)), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=0.03)
                     swnstring_highlevel.input(105 * (2**l), 120 * (2**l), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=0.03)
 
-                    swnstring_lowlevel.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
-                    swnstring_highlevel.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                    swnstring_lowlevel.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105 * (2**(l-1)), 120 * (2**(l-1)))
+                    swnstring_highlevel.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105 * (2**l), 120 * (2**l))
 
                     swnstring_lowlevel.physics(generation=generation)
                     swnstring_highlevel.physics(generation=generation)
@@ -600,7 +748,7 @@ class write_EPS_input:
                 for sample_number in ppt.estimate.used_sample_indices_MLMF(N_list, r_list, l):
                     swnstring = Swanstring(fname + f'_level{l}_lo_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                     swnstring.input(105*(2**l), 120*(2**l), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=0.06)
-                    swnstring.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                    swnstring.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105*(2**l), 120*(2**l))
                     swnstring.physics(generation=generation)
                     swnstring.numerical_parameters(maxitns=3)
                     swnstring.output(output_locs_path, output_path, fname + f'_level{l}_lo_sample{sample_number}')
@@ -636,7 +784,7 @@ class write_EPS_input:
                 sample_number = n
                 swnstring = Swanstring(fname + f'_level0_hi_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                 swnstring.input(105, 120, bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=spec_lowerbound)
-                swnstring.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                swnstring.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105, 120)
                 swnstring.physics(generation=3)
                 swnstring.numerical_parameters(maxitns=maxitns)
                 swnstring.output(output_locs_path, output_path, fname + f'_level0_hi_sample{sample_number}')
@@ -647,7 +795,7 @@ class write_EPS_input:
             for sample_number in ppt.estimate.used_sample_indices_MLMF(N_list, r_list, 0):
                 swnstring = Swanstring(fname + f'_level0_lo_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                 swnstring.input(105, 120, bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=spec_lowerbound)
-                swnstring.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                swnstring.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105, 120)
                 swnstring.physics(generation=2)
                 swnstring.numerical_parameters(maxitns=maxitns)
                 swnstring.output(output_locs_path, output_path, fname + f'_level0_lo_sample{sample_number}')
@@ -666,8 +814,8 @@ class write_EPS_input:
                     swnstring_lowlevel.input(105 * (2**(l-1)), 120 * (2**(l-1)), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=spec_lowerbound)
                     swnstring_highlevel.input(105 * (2**l), 120 * (2**l), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=spec_lowerbound)
 
-                    swnstring_lowlevel.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
-                    swnstring_highlevel.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                    swnstring_lowlevel.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105 * (2**(l-1)), 120 * (2**(l-1)))
+                    swnstring_highlevel.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105 * (2**l), 120 * (2**l))
 
                     swnstring_lowlevel.physics(generation=3)
                     swnstring_highlevel.physics(generation=3)
@@ -687,7 +835,7 @@ class write_EPS_input:
                 for sample_number in ppt.estimate.used_sample_indices_MLMF(N_list, r_list, l):
                     swnstring = Swanstring(fname + f'_level{l}_lo_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                     swnstring.input(105*(2**l), 120*(2**l), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=spec_lowerbound)
-                    swnstring.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                    swnstring.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105*(2**l), 120*(2**l))
                     swnstring.physics(generation=2)
                     swnstring.numerical_parameters(maxitns=maxitns)
                     swnstring.output(output_locs_path, output_path, fname + f'_level{l}_lo_sample{sample_number}')
@@ -696,66 +844,166 @@ class write_EPS_input:
 
 
     @staticmethod
-    def MLMF_sh(path, fname, N_list, r_list):
+    def MLMF_sh(path, fname, N_list, r_list, cluster='snellius'):
         """Writes a *.sh-shell script to run a multilevel multifidelity Monte Carlo ensemble forecast on the Deltares h6 cluster. Path must be in the same folder as the *.swn input files and file
         must have the same naming convention as the *.swn-files.
         
         - path (str):       path to which the *.sh-file will be written;
         - fname (str):      name of the *.sh-file without extension. Must be the same as the corresponding *.swn-files;
         - N_list (list):    values of N^(HF) used in the multilevel multifidelity Monte Carlo method;
-        - r_list (list):    values of r used in the multilevel multifidelity Monte Carlo method.
+        - r_list (list):    values of r used in the multilevel multifidelity Monte Carlo method;
+        - cluster (str):    'h6' or 'snellius'.
         """
-        # Initial text
-        filestring = f"#!/bin/sh\n\n#$ -cwd\n\n#$ -q normal-e3-c7\n\n#$ -N {fname}\n\n\n"
-        # Load modules
-        filestring += f"module load swan/41.31A.1_intel18.0.3_timers\nswan_omp_exe=swan_omp.exe\n\nexport OMP_NUM_THREADS=4"
-        filestring += "echo ----------------------------------------------------------------------\n"
-        filestring += "echo Run of\n"
-        filestring += "echo $swan_omp_exe\n"
-        filestring += "echo with OpenMP on linux-cluster.\n"
-        filestring += "echo SGE_O_WORKDIR : $SGE_O_WORKDIR\n"
-        filestring += "echo HOSTNAME : $HOSTNAME\n"
-        filestring += "echo OMP_NUM_THREADS : $OMP_NUM_THREADS\n"
-        filestring += "echo ----------------------------------------------------------------------\n\n"
+        if cluster == 'h6':
+            # Initial text
+            filestring = f"#!/bin/sh\n\n#$ -cwd\n\n#$ -q normal-e3-c7\n\n#$ -N {fname}\n\n\n"
+            # Load modules
+            filestring += f"module load swan/41.31A.1_intel18.0.3_timers\nswan_omp_exe=swan_omp.exe\n\nexport OMP_NUM_THREADS=4"
+            filestring += "echo ----------------------------------------------------------------------\n"
+            filestring += "echo Run of\n"
+            filestring += "echo $swan_omp_exe\n"
+            filestring += "echo with OpenMP on linux-cluster.\n"
+            filestring += "echo SGE_O_WORKDIR : $SGE_O_WORKDIR\n"
+            filestring += "echo HOSTNAME : $HOSTNAME\n"
+            filestring += "echo OMP_NUM_THREADS : $OMP_NUM_THREADS\n"
+            filestring += "echo ----------------------------------------------------------------------\n\n"
 
-        for n in range(N_list[0]):
-            sample_number = n
-            filestring += f"### LEVEL 0, HIGH-FIDELITY, SAMPLE {sample_number}\n\n"
-            filestring += f"cp {fname}_level0_hi_sample{sample_number}.swn INPUT\n"
-            filestring += "$swan_omp_exe\n"
-            filestring += f"cp PRINT {fname}_level0_hi_sample{sample_number}.prt\n"
-            filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
-        for sample_number in ppt.estimate.used_sample_indices_MLMF(N_list, r_list, 0):
-            filestring += f"### LEVEL 0, LOW-FIDELITY, SAMPLE {sample_number}\n\n"
-            filestring += f"cp {fname}_level0_lo_sample{sample_number}.swn INPUT\n"
-            filestring += "$swan_omp_exe\n"
-            filestring += f"cp PRINT {fname}_level0_lo_sample{sample_number}.prt\n"
-            filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
-
-        for l in range(1, len(N_list)):
-            for n in range(N_list[l]):
-                sample_number = sum(N_list[:l]) + n
-                filestring += f"### LEVEL {l-1}, HIGH-FIDELITY, SAMPLE {sample_number}\n\n"
-                filestring += f"cp {fname}_level{l-1}_hi_sample{sample_number}.swn INPUT\n"
+            for n in range(N_list[0]):
+                sample_number = n
+                filestring += f"### LEVEL 0, HIGH-FIDELITY, SAMPLE {sample_number}\n\n"
+                filestring += f"cp {fname}_level0_hi_sample{sample_number}.swn INPUT\n"
                 filestring += "$swan_omp_exe\n"
-                filestring += f"cp PRINT {fname}_level{l-1}_hi_sample{sample_number}.prt\n"
+                filestring += f"cp PRINT {fname}_level0_hi_sample{sample_number}.prt\n"
                 filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
-            for n in range(N_list[l]):
-                sample_number = sum(N_list[:l]) + n
-                filestring += f"### LEVEL {l}, HIGH-FIDELITY, SAMPLE {sample_number}\n\n"
-                filestring += f"cp {fname}_level{l}_hi_sample{sample_number}.swn INPUT\n"
+            for sample_number in ppt.estimate.used_sample_indices_MLMF(N_list, r_list, 0):
+                filestring += f"### LEVEL 0, LOW-FIDELITY, SAMPLE {sample_number}\n\n"
+                filestring += f"cp {fname}_level0_lo_sample{sample_number}.swn INPUT\n"
                 filestring += "$swan_omp_exe\n"
-                filestring += f"cp PRINT {fname}_level{l}_hi_sample{sample_number}.prt\n"
-                filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
-            for sample_number in ppt.estimate.used_sample_indices_MLMF(N_list, r_list, l):
-                filestring += f"### LEVEL {l}, LOW-FIDELITY, SAMPLE {sample_number}\n\n"
-                filestring += f"cp {fname}_level{l}_lo_sample{sample_number}.swn INPUT\n"
-                filestring += "$swan_omp_exe\n"
-                filestring += f"cp PRINT {fname}_level{l}_lo_sample{sample_number}.prt\n"
+                filestring += f"cp PRINT {fname}_level0_lo_sample{sample_number}.prt\n"
                 filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
 
-        f = open(path + fname + '.sh', 'x')
-        f.write(filestring)
+            for l in range(1, len(N_list)):
+                for n in range(N_list[l]):
+                    sample_number = sum(N_list[:l]) + n
+                    filestring += f"### LEVEL {l-1}, HIGH-FIDELITY, SAMPLE {sample_number}\n\n"
+                    filestring += f"cp {fname}_level{l-1}_hi_sample{sample_number}.swn INPUT\n"
+                    filestring += "$swan_omp_exe\n"
+                    filestring += f"cp PRINT {fname}_level{l-1}_hi_sample{sample_number}.prt\n"
+                    filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
+                for n in range(N_list[l]):
+                    sample_number = sum(N_list[:l]) + n
+                    filestring += f"### LEVEL {l}, HIGH-FIDELITY, SAMPLE {sample_number}\n\n"
+                    filestring += f"cp {fname}_level{l}_hi_sample{sample_number}.swn INPUT\n"
+                    filestring += "$swan_omp_exe\n"
+                    filestring += f"cp PRINT {fname}_level{l}_hi_sample{sample_number}.prt\n"
+                    filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
+                for sample_number in ppt.estimate.used_sample_indices_MLMF(N_list, r_list, l):
+                    filestring += f"### LEVEL {l}, LOW-FIDELITY, SAMPLE {sample_number}\n\n"
+                    filestring += f"cp {fname}_level{l}_lo_sample{sample_number}.swn INPUT\n"
+                    filestring += "$swan_omp_exe\n"
+                    filestring += f"cp PRINT {fname}_level{l}_lo_sample{sample_number}.prt\n"
+                    filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
+
+            f = open(path + fname + '.sh', 'x')
+            f.write(filestring)
+        elif cluster == 'snellius':
+            # Initial text
+            filestring = '#! /bin/bash\n'
+
+            num_hi, num_lo = ppt.predict_computational_costs.MLMF_numevals(N_list, r_list)
+            numtasks = sum(num_hi) + sum(num_lo)
+
+            nodes = int(input("How many nodes do you want to use? "))
+            cores = int(input(f"There are {numtasks} tasks. How many cores per task (max. 192)? "))
+            exptime = input("Expected duration (hh:mm:ss). ")
+
+            filestring += f"#SBATCH --nodes={nodes}\n"
+            filestring += f"#SBATCH --ntasks={numtasks}\n"
+            filestring += f"#SBATCH --cpus-per-task={cores}\n"
+            filestring += f"#SBATCH --job-name={fname}\n"
+            filestring += f"#SBATCH --time={exptime}\n"
+            filestring += "#SBATCH --partition=genoa\n"
+            filestring += "runid=$1\n\n"
+
+            # Load modules
+            filestring += "module purge\nmodule load 2022\nmodule load GCC/11.3.0\nmodule load GCCcore/11.3.0\n\n"
+
+            num_extra_core_tasks = (numtasks*cores) % 16 # SURF charges per 16 cores, so you throw away money if you don't distribute some remaining cores among the tasks
+            if num_extra_core_tasks == 0:
+                filestring += f"set -e\n\nnthreads={cores}\n\n"
+            else:
+                filestring += f"set -e\n\nnthreads={cores}\nnthreads_hi={cores + 1}\n\n"
+
+            task_counter = 0
+
+            for n in range(N_list[0]):
+                sample_number = n
+                filestring += f"# LEVEL 0, HIGH-FIDELITY, SAMPLE {sample_number}\n"
+                filestring += f"cd {fname}_level0_hi_sample{sample_number}\n"
+                if task_counter < num_extra_core_tasks:
+                    filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads_hi ./../../swanrun_deltares41_45_2 -input "{fname}_level0_hi_sample{sample_number}" -omp $nthreads_hi &\n'
+                    filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_level0_hi_sample{sample_number} -omp $nthreads_hi\n\n'
+                else:
+                    filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads ./../../swanrun_deltares41_45_2 -input "{fname}_level0_hi_sample{sample_number}" -omp $nthreads &\n'
+                    filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_level0_hi_sample{sample_number} -omp $nthreads\n\n'
+                task_counter += 1
+            for sample_number in ppt.estimate.used_sample_indices_MLMF(N_list, r_list, 0):
+                filestring += f'# LEVEL 0, LOW-FIDELITY, SAMPLE {sample_number}\n'
+                filestring += f'cd {fname}_level0_lo_sample{sample_number}\n'
+                if task_counter < num_extra_core_tasks:
+                    filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads_hi ./../../swanrun_deltares41_45_2 -input "{fname}_level0_lo_sample{sample_number}" -omp $nthreads_hi &\n'
+                    filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_level0_lo_sample{sample_number} -omp $nthreads_hi\n\n'
+                else:
+                    filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads ./../../swanrun_deltares41_45_2 -input "{fname}_level0_lo_sample{sample_number}" -omp $nthreads &\n'
+                    filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_level0_lo_sample{sample_number} -omp $nthreads\n\n'
+                task_counter += 1
+
+            for l in range(1, len(N_list)):
+                for n in range(N_list[l]):
+                    sample_number = sum(N_list[:l]) + n
+                    filestring += f"# LEVEL {l-1}, HIGH-FIDELITY, SAMPLE {sample_number}\n"
+                    filestring += f"cd {fname}_level{l-1}_hi_sample{sample_number}\n"
+                    if task_counter < num_extra_core_tasks:
+                        filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads_hi ./../../swanrun_deltares41_45_2 -input "{fname}_level{l-1}_hi_sample{sample_number}" -omp $nthreads_hi &\n'
+                        filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_level{l-1}_hi_sample{sample_number} -omp $nthreads_hi\n\n'
+                    else:
+                        filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads ./../../swanrun_deltares41_45_2 -input "{fname}_level{l-1}_hi_sample{sample_number}" -omp $nthreads &\n'
+                        filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_level{l-1}_hi_sample{sample_number} -omp $nthreads\n\n'
+                    task_counter += 1
+                for n in range(N_list[l]):
+                    sample_number = sum(N_list[:l]) + n
+                    filestring += f"# LEVEL {l}, HIGH-FIDELITY, SAMPLE {sample_number}\n"
+                    filestring += f"cd {fname}_level{l}_hi_sample{sample_number}\n"
+                    if task_counter < num_extra_core_tasks:
+                        filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads_hi ./../../swanrun_deltares41_45_2 -input "{fname}_level{l}_hi_sample{sample_number}" -omp $nthreads_hi &\n'
+                        filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_level{l}_hi_sample{sample_number} -omp $nthreads_hi\n\n'
+                    else:
+                        filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads ./../../swanrun_deltares41_45_2 -input "{fname}_level{l}_hi_sample{sample_number}" -omp $nthreads &\n'
+                        filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_level{l}_hi_sample{sample_number} -omp $nthreads\n\n'
+                    task_counter += 1
+                for sample_number in ppt.estimate.used_sample_indices_MLMF(N_list, r_list, l):
+                    filestring += f"# LEVEL {l}, LOW-FIDELITY, SAMPLE {sample_number}\n"
+                    filestring += f"cd {fname}_level{l}_lo_sample{sample_number}\n"
+                    if task_counter < num_extra_core_tasks:
+                        filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads_hi ./../../swanrun_deltares41_45_2 -input "{fname}_level{l}_lo_sample{sample_number}" -omp $nthreads_hi &\n'
+                        filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_level{l}_lo_sample{sample_number} -omp $nthreads_hi\n\n'
+                    else:
+                        filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads ./../../swanrun_deltares41_45_2 -input "{fname}_level{l}_lo_sample{sample_number}" -omp $nthreads &\n'
+                        filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_level{l}_hi_sample{sample_number} -omp $nthreads\n\n'
+
+            filestring += 'wait'
+
+            try:
+                f = open(path + fname + '.sh', 'x')
+                f.write(filestring)
+            except FileExistsError:
+                overwrite = input("Warning: overwriting other file. Continue [y/n]?")
+                if overwrite == 'y':
+                    print("Overwriting")
+                    f = open(path + fname + '.sh', 'w')
+                    f.write(filestring)
+                else:
+                    print("Cancelled")
 
 
     @staticmethod
@@ -803,7 +1051,7 @@ class write_EPS_input:
                 sample_number = n
                 swnstring = Swanstring(fname + f'_olevel0_ilevel0_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                 swnstring.input(105, 120, bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=0.06)
-                swnstring.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                swnstring.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105, 120)
                 swnstring.physics(generation=generation)
                 swnstring.numerical_parameters(maxitns=3)
                 swnstring.output(output_locs_path, output_path, fname + f'_olevel0_ilevel0_sample{sample_number}')
@@ -814,7 +1062,7 @@ class write_EPS_input:
                 sample_number = np.sum(M_array[0, :1]) + n
                 swnstring_lo = Swanstring(fname + f'_olevel0_ilevel0_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                 swnstring_lo.input(105, 120, bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=0.06)
-                swnstring_lo.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                swnstring_lo.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105, 120)
                 swnstring_lo.physics(generation=generation)
                 swnstring_lo.numerical_parameters(maxitns=3)
                 swnstring_lo.output(output_locs_path, output_path, fname + f'_olevel0_ilevel0_sample{sample_number}')
@@ -823,7 +1071,7 @@ class write_EPS_input:
 
                 swnstring_hi = Swanstring(fname + f'_olevel0_ilevel1_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                 swnstring_hi.input(105, 120, bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=0.03)
-                swnstring_hi.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                swnstring_hi.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105, 120)
                 swnstring_hi.physics(generation=generation)
                 swnstring_hi.numerical_parameters(maxitns=20)
                 swnstring_hi.output(output_locs_path, output_path, fname + f'_olevel0_ilevel1_sample{sample_number}')
@@ -837,7 +1085,7 @@ class write_EPS_input:
 
                     swnstring_lowlevel = Swanstring(fname + f'_olevel{l-1}_ilevel0_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                     swnstring_lowlevel.input(105 * (2**(l-1)), 120 * (2**(l-1)), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=0.06)
-                    swnstring_lowlevel.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                    swnstring_lowlevel.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105 * (2**(l-1)), 120 * (2**(l-1)))
                     swnstring_lowlevel.physics(generation=generation)
                     swnstring_lowlevel.numerical_parameters(maxitns=3)
                     swnstring_lowlevel.output(output_locs_path, output_path, fname + f'_olevel{l-1}_ilevel0_sample{sample_number}')
@@ -846,7 +1094,7 @@ class write_EPS_input:
 
                     swnstring_highlevel = Swanstring(fname + f'_olevel{l}_ilevel0_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                     swnstring_highlevel.input(105 * (2**l), 120 * (2**l), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=0.06)
-                    swnstring_highlevel.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                    swnstring_highlevel.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105 * (2**l), 120 * (2**l))
                     swnstring_highlevel.physics(generation=generation)
                     swnstring_highlevel.numerical_parameters(maxitns=3)
                     swnstring_highlevel.output(output_locs_path, output_path, fname + f'_olevel{l}_ilevel0_sample{sample_number}')
@@ -858,7 +1106,7 @@ class write_EPS_input:
 
                     swnstring_olo_ilo = Swanstring(fname + f'_olevel{l-1}_ilevel0_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                     swnstring_olo_ilo.input(105 * (2**(l-1)), 120 * (2**(l-1)), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=0.06)
-                    swnstring_olo_ilo.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                    swnstring_olo_ilo.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath,105 * (2**(l-1)),120 * (2**(l-1)) )
                     swnstring_olo_ilo.physics(generation=generation)
                     swnstring_olo_ilo.numerical_parameters(maxitns=3)
                     swnstring_olo_ilo.output(output_locs_path, output_path, fname + f'_olevel{l-1}_ilevel0_sample{sample_number}')
@@ -867,7 +1115,7 @@ class write_EPS_input:
 
                     swnstring_ohi_ilo = Swanstring(fname + f'_olevel{l}_ilevel0_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                     swnstring_ohi_ilo.input(105 * (2**l), 120 * (2**l), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=0.06)
-                    swnstring_ohi_ilo.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                    swnstring_ohi_ilo.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105 * (2**l),120 * (2**l))
                     swnstring_ohi_ilo.physics(generation=generation)
                     swnstring_ohi_ilo.numerical_parameters(maxitns=3)
                     swnstring_ohi_ilo.output(output_locs_path, output_path, fname + f'_olevel{l}_ilevel0_sample{sample_number}')
@@ -876,7 +1124,7 @@ class write_EPS_input:
 
                     swnstring_olo_ihi = Swanstring(fname + f'_olevel{l-1}_ilevel1_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                     swnstring_olo_ihi.input(105 * (2**(l-1)), 120 * (2**(l-1)), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=0.03)
-                    swnstring_olo_ihi.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                    swnstring_olo_ihi.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105 * (2**(l-1)), 120 * (2**(l-1)))
                     swnstring_olo_ihi.physics(generation=generation)
                     swnstring_olo_ihi.numerical_parameters(maxitns=20)
                     swnstring_olo_ihi.output(output_locs_path, output_path, fname + f'_olevel{l-1}_ilevel1_sample{sample_number}')
@@ -885,7 +1133,7 @@ class write_EPS_input:
 
                     swnstring_ohi_ihi = Swanstring(fname + f'_olevel{l}_ilevel1_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                     swnstring_ohi_ihi.input(105 * (2**l), 120 * (2**l), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=0.03)
-                    swnstring_ohi_ihi.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                    swnstring_ohi_ihi.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105 * (2**l), 120 * (2**l))
                     swnstring_ohi_ihi.physics(generation=generation)
                     swnstring_ohi_ihi.numerical_parameters(maxitns=20)
                     swnstring_ohi_ihi.output(output_locs_path, output_path, fname + f'_olevel{l}_ilevel1_sample{sample_number}')
@@ -920,7 +1168,7 @@ class write_EPS_input:
                 sample_number = n
                 swnstring = Swanstring(fname + f'_olevel0_ilevel0_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                 swnstring.input(105, 120, bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=spec_lowerbound)
-                swnstring.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                swnstring.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105, 120)
                 swnstring.physics(generation=2)
                 swnstring.numerical_parameters(maxitns=maxitns)
                 swnstring.output(output_locs_path, output_path, fname + f'_olevel0_ilevel0_sample{sample_number}')
@@ -931,7 +1179,7 @@ class write_EPS_input:
                 sample_number = np.sum(M_array[0, :1]) + n
                 swnstring_lo = Swanstring(fname + f'_olevel0_ilevel0_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                 swnstring_lo.input(105, 120, bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=spec_lowerbound)
-                swnstring_lo.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                swnstring_lo.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath,105, 120)
                 swnstring_lo.physics(generation=2)
                 swnstring_lo.numerical_parameters(maxitns=maxitns)
                 swnstring_lo.output(output_locs_path, output_path, fname + f'_olevel0_ilevel0_sample{sample_number}')
@@ -940,7 +1188,7 @@ class write_EPS_input:
 
                 swnstring_hi = Swanstring(fname + f'_olevel0_ilevel1_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                 swnstring_hi.input(105, 120, bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=spec_lowerbound)
-                swnstring_hi.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                swnstring_hi.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105, 120)
                 swnstring_hi.physics(generation=3)
                 swnstring_hi.numerical_parameters(maxitns=maxitns)
                 swnstring_hi.output(output_locs_path, output_path, fname + f'_olevel0_ilevel1_sample{sample_number}')
@@ -954,7 +1202,7 @@ class write_EPS_input:
 
                     swnstring_lowlevel = Swanstring(fname + f'_olevel{l-1}_ilevel0_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                     swnstring_lowlevel.input(105 * (2**(l-1)), 120 * (2**(l-1)), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=spec_lowerbound)
-                    swnstring_lowlevel.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                    swnstring_lowlevel.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105, 120)
                     swnstring_lowlevel.physics(generation=2)
                     swnstring_lowlevel.numerical_parameters(maxitns=maxitns)
                     swnstring_lowlevel.output(output_locs_path, output_path, fname + f'_olevel{l-1}_ilevel0_sample{sample_number}')
@@ -963,7 +1211,7 @@ class write_EPS_input:
 
                     swnstring_highlevel = Swanstring(fname + f'_olevel{l}_ilevel0_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                     swnstring_highlevel.input(105 * (2**l), 120 * (2**l), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=spec_lowerbound)
-                    swnstring_highlevel.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                    swnstring_highlevel.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105, 120)
                     swnstring_highlevel.physics(generation=2)
                     swnstring_highlevel.numerical_parameters(maxitns=maxitns)
                     swnstring_highlevel.output(output_locs_path, output_path, fname + f'_olevel{l}_ilevel0_sample{sample_number}')
@@ -975,7 +1223,7 @@ class write_EPS_input:
 
                     swnstring_olo_ilo = Swanstring(fname + f'_olevel{l-1}_ilevel0_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                     swnstring_olo_ilo.input(105 * (2**(l-1)), 120 * (2**(l-1)), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=spec_lowerbound)
-                    swnstring_olo_ilo.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                    swnstring_olo_ilo.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105 * (2**(l-1)), 120 * (2**(l-1)))
                     swnstring_olo_ilo.physics(generation=2)
                     swnstring_olo_ilo.numerical_parameters(maxitns=maxitns)
                     swnstring_olo_ilo.output(output_locs_path, output_path, fname + f'_olevel{l-1}_ilevel0_sample{sample_number}')
@@ -984,7 +1232,7 @@ class write_EPS_input:
 
                     swnstring_ohi_ilo = Swanstring(fname + f'_olevel{l}_ilevel0_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                     swnstring_ohi_ilo.input(105 * (2**l), 120 * (2**l), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=spec_lowerbound)
-                    swnstring_ohi_ilo.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                    swnstring_ohi_ilo.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105 * (2**l), 120 * (2**l))
                     swnstring_ohi_ilo.physics(generation=2)
                     swnstring_ohi_ilo.numerical_parameters(maxitns=maxitns)
                     swnstring_ohi_ilo.output(output_locs_path, output_path, fname + f'_olevel{l}_ilevel0_sample{sample_number}')
@@ -993,7 +1241,7 @@ class write_EPS_input:
 
                     swnstring_olo_ihi = Swanstring(fname + f'_olevel{l-1}_ilevel1_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                     swnstring_olo_ihi.input(105 * (2**(l-1)), 120 * (2**(l-1)), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=spec_lowerbound)
-                    swnstring_olo_ihi.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                    swnstring_olo_ihi.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath, 105 * (2**(l-1)), 120 * (2**(l-1)))
                     swnstring_olo_ihi.physics(generation=3)
                     swnstring_olo_ihi.numerical_parameters(maxitns=maxitns)
                     swnstring_olo_ihi.output(output_locs_path, output_path, fname + f'_olevel{l-1}_ilevel1_sample{sample_number}')
@@ -1002,7 +1250,7 @@ class write_EPS_input:
 
                     swnstring_ohi_ihi = Swanstring(fname + f'_olevel{l}_ilevel1_sample{sample_number}', 'SWAN-EPS', ppt.string.int_to_threedigitstring(run_counter), start_iso, end_iso, timestep)
                     swnstring_ohi_ihi.input(105 * (2**l), 120 * (2**l), bottom_path, windfile=wind_path_without_file+f'stormxaver_wind_1204{sample_number}.nc', spec_lowerbound=spec_lowerbound)
-                    swnstring_ohi_ihi.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath)
+                    swnstring_ohi_ihi.boundary_condition_tpar(era5wavefield, tpar_filename, tpar_directory, tpar_swanpath,105 * (2**l), 120 * (2**l))
                     swnstring_ohi_ihi.physics(generation=3)
                     swnstring_ohi_ihi.numerical_parameters(maxitns=maxitns)
                     swnstring_ohi_ihi.output(output_locs_path, output_path, fname + f'_olevel{l}_ilevel1_sample{sample_number}')
@@ -1011,104 +1259,260 @@ class write_EPS_input:
 
 
     @staticmethod
-    def NML_sh(path, fname, M_array):
+    def NML_sh(path, fname, M_array, cluster='snellius'):
         """Writes a *.sh-shell script to run a nested multilevel Monte Carlo ensemble forecast. Path must be in the same folder as the *.swn input files and the file
         must have the same naming convention as the *.swn-files.
         
         - path (str):           path to which the *.sh-file will be written;
         - fname (str):          name of the *.sh-file without extension. Must be the same as the corresponding *.swn-files;
-        - M_array (np.ndarray): values of M used in the nested multilevel Monte Carlo method.
+        - M_array (np.ndarray): values of M used in the nested multilevel Monte Carlo method;
+        - cluster (str):        'h6' or 'snellius'.
         """
-        num_outer_levels = M_array.shape[0]
-        num_inner_levels = M_array.shape[1]
+        if cluster == 'h6':
+            num_outer_levels = M_array.shape[0]
+            num_inner_levels = M_array.shape[1]
 
-        # Initial text
-        filestring = f"#!/bin/sh\n\n#$ -cwd\n\n#$ -q normal-e3-c7\n\n#$ -N {fname}\n\n\n"
-        # Load modules
-        filestring += f"module load swan/41.31A.1_intel18.0.3_timers\nswan_omp_exe=swan_omp.exe\n\nexport OMP_NUM_THREADS=4"
-        filestring += "echo ----------------------------------------------------------------------\n"
-        filestring += "echo Run of\n"
-        filestring += "echo $swan_omp_exe\n"
-        filestring += "echo with OpenMP on linux-cluster.\n"
-        filestring += "echo SGE_O_WORKDIR : $SGE_O_WORKDIR\n"
-        filestring += "echo HOSTNAME : $HOSTNAME\n"
-        filestring += "echo OMP_NUM_THREADS : $OMP_NUM_THREADS\n"
-        filestring += "echo ----------------------------------------------------------------------\n\n"
+            # Initial text
+            filestring = f"#!/bin/sh\n\n#$ -cwd\n\n#$ -q normal-e3-c7\n\n#$ -N {fname}\n\n\n"
+            # Load modules
+            filestring += f"module load swan/41.31A.1_intel18.0.3_timers\nswan_omp_exe=swan_omp.exe\n\nexport OMP_NUM_THREADS=4"
+            filestring += "echo ----------------------------------------------------------------------\n"
+            filestring += "echo Run of\n"
+            filestring += "echo $swan_omp_exe\n"
+            filestring += "echo with OpenMP on linux-cluster.\n"
+            filestring += "echo SGE_O_WORKDIR : $SGE_O_WORKDIR\n"
+            filestring += "echo HOSTNAME : $HOSTNAME\n"
+            filestring += "echo OMP_NUM_THREADS : $OMP_NUM_THREADS\n"
+            filestring += "echo ----------------------------------------------------------------------\n\n"
 
-        # Outer level 0
-        for n in range(M_array[0,0]):
-            sample_number = n
-            filestring += f"### OUTER LEVEL 0, INNER LEVEL 0, SAMPLE {sample_number}\n\n"
-            filestring += f"cp {fname}_olevel0_ilevel0_sample{sample_number}.swn INPUT\n"
-            filestring += "$swan_omp_exe\n"
-            filestring += f"cp PRINT {fname}_olevel0_ilevel0_sample{sample_number}.prt\n"
-            filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
-
-        for k in range(1, num_inner_levels):
-            for n in range(M_array[0, k]):
-                sample_number = np.sum(M_array[0, :k]) + n
-                filestring += f"### OUTER LEVEL 0, INNER LEVEL {k-1}, SAMPLE {sample_number}\n\n"
-                filestring += f"cp {fname}_olevel0_ilevel{k-1}_sample{sample_number}.swn INPUT\n"
+            # Outer level 0
+            for n in range(M_array[0,0]):
+                sample_number = n
+                filestring += f"### OUTER LEVEL 0, INNER LEVEL 0, SAMPLE {sample_number}\n\n"
+                filestring += f"cp {fname}_olevel0_ilevel0_sample{sample_number}.swn INPUT\n"
                 filestring += "$swan_omp_exe\n"
-                filestring += f"cp PRINT {fname}_olevel0_ilevel{k-1}_sample{sample_number}.prt\n"
-                filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
-            for n in range(M_array[0, k]):
-                sample_number = np.sum(M_array[0, :k]) + n
-                filestring += f"### OUTER LEVEL 0, INNER LEVEL {k}, SAMPLE {sample_number}\n\n"
-                filestring += f"cp {fname}_olevel0_ilevel{k}_sample{sample_number}.swn INPUT\n"
-                filestring += "$swan_omp_exe\n"
-                filestring += f"cp PRINT {fname}_olevel0_ilevel{k}_sample{sample_number}.prt\n"
+                filestring += f"cp PRINT {fname}_olevel0_ilevel0_sample{sample_number}.prt\n"
                 filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
 
-        # Higher outer level corrections
-        for l in range(1, num_outer_levels):
-            for n in range(M_array[l, 0]):
-                sample_number = np.sum(M_array[:l, :]) + n
-                filestring += f"### OUTER LEVEL {l-1}, INNER LEVEL 0, SAMPLE {sample_number}\n\n"
-                filestring += f"cp {fname}_olevel{l-1}_ilevel0_sample{sample_number}.swn INPUT\n"
-                filestring += "$swan_omp_exe\n"
-                filestring += f"cp PRINT {fname}_olevel{l-1}_ilevel0_sample{sample_number}.prt\n"
-                filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
-            for n in range(M_array[l, 0]):
-                sample_number = np.sum(M_array[:l, :]) + n
-                filestring += f"### OUTER LEVEL {l}, INNER LEVEL 0, SAMPLE {sample_number}\n\n"
-                filestring += f"cp {fname}_olevel{l}_ilevel0_sample{sample_number}.swn INPUT\n"
-                filestring += "$swan_omp_exe\n"
-                filestring += f"cp PRINT {fname}_olevel{l}_ilevel0_sample{sample_number}.prt\n"
-                filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
-            
             for k in range(1, num_inner_levels):
-                for n in range(M_array[l, k]):
-                    sample_number = np.sum(M_array[:l, :]) + np.sum(M_array[l, :k]) + n
-                    filestring += f"### OUTER LEVEL {l-1}, INNER LEVEL {k-1}, SAMPLE {sample_number}\n\n"
-                    filestring += f"cp {fname}_olevel{l-1}_ilevel{k-1}_sample{sample_number}.swn INPUT\n"
+                for n in range(M_array[0, k]):
+                    sample_number = np.sum(M_array[0, :k]) + n
+                    filestring += f"### OUTER LEVEL 0, INNER LEVEL {k-1}, SAMPLE {sample_number}\n\n"
+                    filestring += f"cp {fname}_olevel0_ilevel{k-1}_sample{sample_number}.swn INPUT\n"
                     filestring += "$swan_omp_exe\n"
-                    filestring += f"cp PRINT {fname}_olevel{l-1}_ilevel{k-1}_sample{sample_number}.prt\n"
+                    filestring += f"cp PRINT {fname}_olevel0_ilevel{k-1}_sample{sample_number}.prt\n"
                     filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
-                for n in range(M_array[l, k]):
-                    sample_number = np.sum(M_array[:l, :]) + np.sum(M_array[l, :k]) + n
-                    filestring += f"### OUTER LEVEL {l}, INNER LEVEL {k-1}, SAMPLE {sample_number}\n\n"
-                    filestring += f"cp {fname}_olevel{l}_ilevel{k-1}_sample{sample_number}.swn INPUT\n"
+                for n in range(M_array[0, k]):
+                    sample_number = np.sum(M_array[0, :k]) + n
+                    filestring += f"### OUTER LEVEL 0, INNER LEVEL {k}, SAMPLE {sample_number}\n\n"
+                    filestring += f"cp {fname}_olevel0_ilevel{k}_sample{sample_number}.swn INPUT\n"
                     filestring += "$swan_omp_exe\n"
-                    filestring += f"cp PRINT {fname}_olevel{l}_ilevel{k-1}_sample{sample_number}.prt\n"
+                    filestring += f"cp PRINT {fname}_olevel0_ilevel{k}_sample{sample_number}.prt\n"
                     filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
-                for n in range(M_array[l, k]):
-                    sample_number = np.sum(M_array[:l, :]) + np.sum(M_array[l, :k]) + n
-                    filestring += f"### OUTER LEVEL {l-1}, INNER LEVEL {k}, SAMPLE {sample_number}\n\n"
-                    filestring += f"cp {fname}_olevel{l-1}_ilevel{k}_sample{sample_number}.swn INPUT\n"
+
+            # Higher outer level corrections
+            for l in range(1, num_outer_levels):
+                for n in range(M_array[l, 0]):
+                    sample_number = np.sum(M_array[:l, :]) + n
+                    filestring += f"### OUTER LEVEL {l-1}, INNER LEVEL 0, SAMPLE {sample_number}\n\n"
+                    filestring += f"cp {fname}_olevel{l-1}_ilevel0_sample{sample_number}.swn INPUT\n"
                     filestring += "$swan_omp_exe\n"
-                    filestring += f"cp PRINT {fname}_olevel{l-1}_ilevel{k}_sample{sample_number}.prt\n"
+                    filestring += f"cp PRINT {fname}_olevel{l-1}_ilevel0_sample{sample_number}.prt\n"
                     filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
-                for n in range(M_array[l, k]):
-                    sample_number = np.sum(M_array[:l, :]) + np.sum(M_array[l, :k]) + n
-                    filestring += f"### OUTER LEVEL {l}, INNER LEVEL {k}, SAMPLE {sample_number}\n\n"
-                    filestring += f"cp {fname}_olevel{l}_ilevel{k}_sample{sample_number}.swn INPUT\n"
+                for n in range(M_array[l, 0]):
+                    sample_number = np.sum(M_array[:l, :]) + n
+                    filestring += f"### OUTER LEVEL {l}, INNER LEVEL 0, SAMPLE {sample_number}\n\n"
+                    filestring += f"cp {fname}_olevel{l}_ilevel0_sample{sample_number}.swn INPUT\n"
                     filestring += "$swan_omp_exe\n"
-                    filestring += f"cp PRINT {fname}_olevel{l}_ilevel{k}_sample{sample_number}.prt\n"
+                    filestring += f"cp PRINT {fname}_olevel{l}_ilevel0_sample{sample_number}.prt\n"
                     filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
-        
-        f = open(path + fname + '.sh', 'x')
-        f.write(filestring)
+                
+                for k in range(1, num_inner_levels):
+                    for n in range(M_array[l, k]):
+                        sample_number = np.sum(M_array[:l, :]) + np.sum(M_array[l, :k]) + n
+                        filestring += f"### OUTER LEVEL {l-1}, INNER LEVEL {k-1}, SAMPLE {sample_number}\n\n"
+                        filestring += f"cp {fname}_olevel{l-1}_ilevel{k-1}_sample{sample_number}.swn INPUT\n"
+                        filestring += "$swan_omp_exe\n"
+                        filestring += f"cp PRINT {fname}_olevel{l-1}_ilevel{k-1}_sample{sample_number}.prt\n"
+                        filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
+                    for n in range(M_array[l, k]):
+                        sample_number = np.sum(M_array[:l, :]) + np.sum(M_array[l, :k]) + n
+                        filestring += f"### OUTER LEVEL {l}, INNER LEVEL {k-1}, SAMPLE {sample_number}\n\n"
+                        filestring += f"cp {fname}_olevel{l}_ilevel{k-1}_sample{sample_number}.swn INPUT\n"
+                        filestring += "$swan_omp_exe\n"
+                        filestring += f"cp PRINT {fname}_olevel{l}_ilevel{k-1}_sample{sample_number}.prt\n"
+                        filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
+                    for n in range(M_array[l, k]):
+                        sample_number = np.sum(M_array[:l, :]) + np.sum(M_array[l, :k]) + n
+                        filestring += f"### OUTER LEVEL {l-1}, INNER LEVEL {k}, SAMPLE {sample_number}\n\n"
+                        filestring += f"cp {fname}_olevel{l-1}_ilevel{k}_sample{sample_number}.swn INPUT\n"
+                        filestring += "$swan_omp_exe\n"
+                        filestring += f"cp PRINT {fname}_olevel{l-1}_ilevel{k}_sample{sample_number}.prt\n"
+                        filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
+                    for n in range(M_array[l, k]):
+                        sample_number = np.sum(M_array[:l, :]) + np.sum(M_array[l, :k]) + n
+                        filestring += f"### OUTER LEVEL {l}, INNER LEVEL {k}, SAMPLE {sample_number}\n\n"
+                        filestring += f"cp {fname}_olevel{l}_ilevel{k}_sample{sample_number}.swn INPUT\n"
+                        filestring += "$swan_omp_exe\n"
+                        filestring += f"cp PRINT {fname}_olevel{l}_ilevel{k}_sample{sample_number}.prt\n"
+                        filestring += "rm -f INPUT\nrm -f PRINT\nrm -f norm_end\n\n"
+            
+            f = open(path + fname + '.sh', 'x')
+            f.write(filestring)
+        elif cluster=='snellius':
+            # Initial text
+            filestring = '#! /bin/bash\n'
+
+            numtasks = np.sum(ppt.predict_computational_costs.NML_numevals(M_array))
+            num_outer_levels = M_array.shape[0]
+            num_inner_levels = M_array.shape[1]
+
+            nodes = int(input("How many nodes do you want to use? "))
+            cores = int(input(f"There are {numtasks} tasks. How many cores per task (max. 192)? "))
+            exptime = input("Expected duration (hh:mm:ss). ")
+
+            filestring += f"#SBATCH --nodes={nodes}\n"
+            filestring += f"#SBATCH --ntasks={numtasks}\n"
+            filestring += f"#SBATCH --cpus-per-task={cores}\n"
+            filestring += f"#SBATCH --job-name={fname}\n"
+            filestring += f"#SBATCH --time={exptime}\n"
+            filestring += "#SBATCH --partition=genoa\n"
+            filestring += "runid=$1\n\n"
+
+            # Load modules
+            filestring += "module purge\nmodule load 2022\nmodule load GCC/11.3.0\nmodule load GCCcore/11.3.0\n\n"
+
+            num_extra_core_tasks = (numtasks*cores) % 16 # SURF charges per 16 cores, so you throw away money if you don't distribute some remaining cores among the tasks
+            if num_extra_core_tasks == 0:
+                filestring += f"set -e\n\nnthreads={cores}\n\n"
+            else:
+                filestring += f"set -e\n\nnthreads={cores}\nnthreads_hi={cores + 1}\n\n"
+
+            task_counter = 0
+
+            for n in range(M_array[0,0]):
+                sample_number = n
+                filestring += f"# OUTER LEVEL 0, INNER LEVEL 0, SAMPLE {sample_number}\n"
+                filestring += f"cd {fname}_olevel0_ilevel0_sample{sample_number}\n"
+                if task_counter < num_extra_core_tasks:
+                    filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads_hi ./../../swanrun_deltares41_45_2 -input "{fname}_olevel0_ilevel0_sample{sample_number}" -omp $nthreads_hi & \n'
+                    filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_olevel0_ilevel0_sample{sample_number}.swn -omp $nthreads_hi\n\n'
+                else:
+                    filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads ./../../swanrun_deltares41_45_2 -input "{fname}_olevel0_ilevel0_sample{sample_number}" -omp $nthreads & \n'
+                    filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_olevel0_ilevel0_sample{sample_number}.swn -omp $nthreads\n\n'
+                task_counter += 1 
+
+            for k in range(1, num_inner_levels):
+                for n in range(M_array[0, k]):
+                    sample_number = np.sum(M_array[0, :k]) + n
+                    filestring += f"# OUTER LEVEL 0, INNER LEVEL {k-1}, SAMPLE {sample_number}\n"
+                    filestring += f"cd {fname}_olevel0_ilevel{k-1}_sample{sample_number}\n"
+                    if task_counter < num_extra_core_tasks:
+                        filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads_hi ./../../swanrun_deltares41_45_2 -input "{fname}_olevel0_ilevel{k-1}_sample{sample_number}" -omp $nthreads_hi & \n'
+                        filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_olevel0_ilevel{k-1}_sample{sample_number}.swn -omp $nthreads_hi\n\n'
+                    else:
+                        filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads ./../../swanrun_deltares41_45_2 -input "{fname}_olevel0_ilevel{k-1}_sample{sample_number}" -omp $nthreads & \n'
+                        filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_olevel0_ilevel{k-1}_sample{sample_number}.swn -omp $nthreads\n\n'
+                    task_counter += 1
+                for n in range(M_array[0, k]):
+                    sample_number = np.sum(M_array[0, :k]) + n
+                    filestring += f"# OUTER LEVEL 0, INNER LEVEL {k}, SAMPLE {sample_number}\n"
+                    filestring += f"cd {fname}_olevel0_ilevel{k}_sample{sample_number}\n"
+                    if task_counter < num_extra_core_tasks:
+                        filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads_hi ./../../swanrun_deltares41_45_2 -input "{fname}_olevel0_ilevel{k}_sample{sample_number}" -omp $nthreads_hi & \n'
+                        filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_olevel0_ilevel{k}_sample{sample_number}.swn -omp $nthreads_hi\n\n'
+                    else:
+                        filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads ./../../swanrun_deltares41_45_2 -input "{fname}_olevel0_ilevel{k}_sample{sample_number}" -omp $nthreads & \n'
+                        filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_olevel0_ilevel{k}_sample{sample_number}.swn -omp $nthreads\n\n'
+                    task_counter += 1
+
+            for l in range(1, num_outer_levels):
+                for n in range(M_array[l, 0]):
+                    sample_number = np.sum(M_array[:l, :]) + n
+                    filestring += f"# OUTER LEVEL {l-1}, INNER LEVEL 0, SAMPLE {sample_number}\n"
+                    filestring += f"cd {fname}_olevel{l-1}_ilevel0_sample{sample_number}\n"
+                    if task_counter < num_extra_core_tasks:
+                        filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads_hi ./../../swanrun_deltares41_45_2 -input "{fname}_olevel{l-1}_ilevel0_sample{sample_number}" -omp $nthreads_hi & \n'
+                        filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_olevel{l-1}_ilevel0_sample{sample_number}.swn -omp $nthreads_hi\n\n'
+                    else:
+                        filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads ./../../swanrun_deltares41_45_2 -input "{fname}_olevel{l-1}_ilevel0_sample{sample_number}" -omp $nthreads & \n'
+                        filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_olevel{l-1}_ilevel0_sample{sample_number}.swn -omp $nthreads\n\n'
+                    task_counter += 1
+                for n in range(M_array[l, 0]):
+                    sample_number = np.sum(M_array[:l, :]) + n
+                    filestring += f"# OUTER LEVEL {l}, INNER LEVEL 0, SAMPLE {sample_number}\n"
+                    filestring += f"cd {fname}_olevel{l}_ilevel0_sample{sample_number}\n"
+                    if task_counter < num_extra_core_tasks:
+                        filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads_hi ./../../swanrun_deltares41_45_2 -input "{fname}_olevel{l}_ilevel0_sample{sample_number}" -omp $nthreads_hi & \n'
+                        filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_olevel{l}_ilevel0_sample{sample_number}.swn -omp $nthreads_hi\n\n'
+                    else:
+                        filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads ./../../swanrun_deltares41_45_2 -input "{fname}_olevel{l}_ilevel0_sample{sample_number}" -omp $nthreads & \n'
+                        filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_olevel{l}_ilevel0_sample{sample_number}.swn -omp $nthreads\n\n'
+                    task_counter += 1
+
+                for k in range(1, num_inner_levels):
+                    for n in range(M_array[l, k]):
+                        sample_number = np.sum(M_array[:l, :]) + np.sum(M_array[l, :k]) + n
+                        filestring += f"# OUTER LEVEL {l-1}, INNER LEVEL {k-1}, SAMPLE {sample_number}\n"
+                        filestring += f"cd {fname}_olevel{l-1}_ilevel{k-1}_sample{sample_number}\n"
+                        if task_counter < num_extra_core_tasks:
+                            filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads_hi ./../../swanrun_deltares41_45_2 -input "{fname}_olevel{l-1}_ilevel{k-1}_sample{sample_number}" -omp $nthreads_hi & \n'
+                            filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_olevel{l-1}_ilevel{k-1}_sample{sample_number}.swn -omp $nthreads_hi\n\n'
+                        else:
+                            filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads ./../../swanrun_deltares41_45_2 -input "{fname}_olevel{l-1}_ilevel{k-1}_sample{sample_number}" -omp $nthreads & \n'
+                            filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_olevel{l-1}_ilevel{k-1}_sample{sample_number}.swn -omp $nthreads\n\n'
+                        task_counter += 1
+                    for n in range(M_array[l, k]):
+                        sample_number = np.sum(M_array[:l, :]) + np.sum(M_array[l, :k]) + n
+                        filestring += f"# OUTER LEVEL {l}, INNER LEVEL {k-1}, SAMPLE {sample_number}\n"
+                        filestring += f"cd {fname}_olevel{l}_ilevel{k-1}_sample{sample_number}\n"
+                        if task_counter < num_extra_core_tasks:
+                            filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads_hi ./../../swanrun_deltares41_45_2 -input "{fname}_olevel{l}_ilevel{k-1}_sample{sample_number}" -omp $nthreads_hi & \n'
+                            filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_olevel{l}_ilevel{k-1}_sample{sample_number}.swn -omp $nthreads_hi\n\n'
+                        else:
+                            filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads ./../../swanrun_deltares41_45_2 -input "{fname}_olevel{l}_ilevel{k-1}_sample{sample_number}" -omp $nthreads & \n'
+                            filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_olevel{l}_ilevel{k-1}_sample{sample_number}.swn -omp $nthreads\n\n'
+                        task_counter += 1
+                    for n in range(M_array[l, k]):
+                        sample_number = np.sum(M_array[:l, :]) + np.sum(M_array[l, :k]) + n
+                        filestring += f"# OUTER LEVEL {l-1}, INNER LEVEL {k}, SAMPLE {sample_number}\n"
+                        filestring += f"cd {fname}_olevel{l-1}_ilevel{k}_sample{sample_number}\n"
+                        if task_counter < num_extra_core_tasks:
+                            filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads_hi ./../../swanrun_deltares41_45_2 -input "{fname}_olevel{l-1}_ilevel{k}_sample{sample_number}" -omp $nthreads_hi & \n'
+                            filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_olevel{l-1}_ilevel{k}_sample{sample_number}.swn -omp $nthreads_hi\n\n'
+                        else:
+                            filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads ./../../swanrun_deltares41_45_2 -input "{fname}_olevel{l-1}_ilevel{k}_sample{sample_number}" -omp $nthreads & \n'
+                            filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_olevel{l-1}_ilevel{k}_sample{sample_number}.swn -omp $nthreads\n\n'
+                        task_counter += 1
+                    for n in range(M_array[l, k]):
+                        sample_number = np.sum(M_array[:l, :]) + np.sum(M_array[l, :k]) + n
+                        filestring += f"# OUTER LEVEL {l}, INNER LEVEL {k}, SAMPLE {sample_number}\n"
+                        filestring += f"cd {fname}_olevel{l}_ilevel{k}_sample{sample_number}\n"
+                        if task_counter < num_extra_core_tasks:
+                            filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads_hi ./../../swanrun_deltares41_45_2 -input "{fname}_olevel{l}_ilevel{k}_sample{sample_number}" -omp $nthreads_hi & \n'
+                            filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_olevel{l}_ilevel{k}_sample{sample_number}.swn -omp $nthreads_hi\n\n'
+                        else:
+                            filestring += f'srun --ntasks=1 --cpus-per-task=$nthreads ./../../swanrun_deltares41_45_2 -input "{fname}_olevel{l}_ilevel{k}_sample{sample_number}" -omp $nthreads & \n'
+                            filestring += f'cd -\necho swanrun_deltares41_45_2 -input {fname}_olevel{l}_ilevel{k}_sample{sample_number}.swn -omp $nthreads\n\n'
+                        task_counter += 1
+                        
+            filestring += 'wait'
+
+            try:
+                f = open(path + fname + '.sh', 'x')
+                f.write(filestring)
+            except FileExistsError:
+                overwrite = input("Warning: overwriting other file. Continue [y/n]?")
+                if overwrite == 'y':
+                    print("Overwriting")
+                    f = open(path + fname + '.sh', 'w')
+                    f.write(filestring)
+                else:
+                    print("Cancelled")
+            
+                    
+                    
+
 
 
 ## DOWNLOAD AND MANIPULATE ECMWF DATA ##
@@ -1334,25 +1738,25 @@ class ecmwfdata:
         x = xr.DataArray(era5_wind_field['longitude'].values, dims=('x'), name='x')
         y = xr.DataArray(era5_wind_field['latitude'].values, dims=('y'), name='y')
 
-        time.attrs = correct_wind_data['time'].attrs
-        x.attrs = correct_wind_data['x'].attrs
-        y.attrs = correct_wind_data['y'].attrs
+        time.attrs = ecmwfdata.correct_wind_time_attrs
+        x.attrs = ecmwfdata.correct_wind_x_attrs
+        y.attrs = ecmwfdata.correct_wind_y_attrs
 
         # Data variables
 
         z_field = np.empty((era5_wind_field['latitude'].values.shape[0], era5_wind_field['longitude'].values.shape[0]))
         z_field[:] = 10.
         z = xr.DataArray(z_field, dims=('y', 'x'), coords={'y': y, 'x': x}, name='z')
-        z.attrs = correct_wind_data['z'].attrs
+        z.attrs = ecmwfdata.correct_wind_z_attrs
 
         crs = xr.DataArray(0, name='crs')
-        crs.attrs = correct_wind_data['crs'].attrs
+        crs.attrs = ecmwfdata.correct_wind_crs_attrs
 
         eastward_wind = xr.DataArray(era5_wind_field['u10'].values, dims=('time', 'y', 'x'), coords={'time': time, 'y': y, 'x': x}, name='eastward_wind')
-        eastward_wind.attrs = correct_wind_data['eastward_wind'].attrs
+        eastward_wind.attrs = ecmwfdata.correct_wind_u_attrs
 
         northward_wind = xr.DataArray(era5_wind_field['v10'].values, dims=('time', 'y', 'x'), coords={'time': time, 'y': y, 'x': x}, name='northward_wind')
-        northward_wind.attrs = correct_wind_data['northward_wind'].attrs
+        northward_wind.attrs = ecmwfdata.correct_wind_v_attrs
 
         swn_wind_field = xr.Dataset({'z': z, 'crs': crs, 'eastward_wind': eastward_wind, 'northward_wind': northward_wind})
         swn_wind_field.attrs['Conventions']             = 'CF-1.6,UGRID-0.9'
@@ -1503,6 +1907,12 @@ class ecmwfdata:
                 f = open(tparpath + f'{tparname}_s_{i}.tpar', 'w')
             f.write(string)
 
+
+if __name__ == "__main__":
+    path = "P:\\1230882-emodnet_hrsm\\vanCas\\Ensemble_Forecast\\EPSruns\\full\\"
+    fname = "loader"
+    create_empty_file(path, fname)
+    
     
 ##############
 ## OLD CODE ##
